@@ -1,3 +1,5 @@
+# This code is borrowed from the CGCNN implementation in M2Hub (https://github.com/yuanqidu/M2Hub).
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

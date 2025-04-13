@@ -3,8 +3,8 @@
 #   VAL: 'data/ds3.json'
 
 DATASET:
- TRAIN: 'data/filtered_data/train_data.json'
- VAL: 'data/filtered_data/test_data.json'
+ TRAIN: 'data/fine_tune/train_data.json'
+ VAL: 'data/fine_tune/test_data.json'
 
 MODEL:
   NAME: 'cgcnn'
@@ -27,9 +27,4 @@ CGCNN:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "filtered_data/cgcnn_tst"
-
-OUTPUT:
-  DIR: 'result_new_data/cgcnn_full'
-  LOOP_RESULTS: 'result/reduce_encoding_ds2/loop_50epochs.csv'
-  PREDICTIONS: 'result/reduce_encoding_ds2/predict.csv'
+  LOG_DIR_NAME: "fine_tune_data/cgcnn_tst"

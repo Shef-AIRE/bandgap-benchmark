@@ -1,3 +1,4 @@
+# The following code is a modified version of the original code from the LEFTNet repository (https://github.com/yuanqidu/LeftNet)
 
 import math
 from math import pi
@@ -6,17 +7,9 @@ from typing import Optional, Tuple
 import torch
 from torch import nn
 from torch.nn import Embedding
-from torch.xpu import device
 from torch_geometric.nn import radius_graph
 from torch_geometric.nn.conv import MessagePassing
 from torch_scatter import scatter
-
-def swish(x):
-    return x * torch.sigmoid(x)
-
-
-## radial basis function to embed distances
-## add comments: based on XXX code
 class rbf_emb(nn.Module):
     """
     modified: delete cutoff with r
@@ -53,22 +46,18 @@ class rbf_emb(nn.Module):
 
 
 class NeighborEmb(MessagePassing):
-    def __init__(self, hid_dim: int, input_dim=92):
+    def __init__(self, hid_dim: int):
         super(NeighborEmb, self).__init__(aggr="add")
-        # self.embedding = nn.Embedding(95, hid_dim)
+        self.embedding = nn.Embedding(95, hid_dim)
         self.hid_dim = hid_dim
-        self.input_dim = input_dim
-        self.fc = nn.Linear(self.input_dim, self.hid_dim)
         self.ln_emb = nn.LayerNorm(hid_dim, elementwise_affine=False)
 
-    def forward(self, z, edge_index, embs):
- 
-        """Atom Embedding + Neighborhours Embedding"""
-        z_emb = self.ln_emb(self.fc(z)) # shape: (num_nodes, hidden_channels)
-        s_neighbors = self.propagate(edge_index, x=z_emb, norm=embs)
-        z_emb = z_emb + s_neighbors
-        # s = s + s_neighbors
-        return z_emb # shape: (num_nodes, hidden_channels)
+    def forward(self, z, s, edge_index, embs):
+        s_neighbors = self.ln_emb(self.embedding(z))
+        s_neighbors = self.propagate(edge_index, x=s_neighbors, norm=embs)
+
+        s = s + s_neighbors
+        return s
 
     def message(self, x_j, norm):
         return norm.view(-1, self.hid_dim) * x_j
@@ -84,7 +73,7 @@ class S_vector(MessagePassing):
 
     def forward(self, s, v, edge_index, emb):
         s = self.lin1(s)
-        emb = emb.unsqueeze(1) * v # edge weights on each vector features
+        emb = emb.unsqueeze(1) * v
 
         v = self.propagate(edge_index, x=s, norm=emb)
         return v.view(-1, 3, self.hid_dim)
@@ -108,7 +97,6 @@ class EquiMessagePassing(MessagePassing):
         self.dir_proj = nn.Sequential(
             nn.Linear(3 * self.hidden_channels + self.num_radial, self.hidden_channels * 3),
             nn.SiLU(inplace=True),
-            # nn.Dropout(0.1),
             nn.Linear(self.hidden_channels * 3, self.hidden_channels * 3),
         )
 
@@ -136,11 +124,11 @@ class EquiMessagePassing(MessagePassing):
         ## question: why don't reset parameters for dir_proj?
 
     def forward(self, x, vec, edge_index, edge_rbf, weight, edge_vector):
-        xh = self.x_proj(self.x_layernorm(x)) # hidden_channels -> hidden_channels * 3, node features
+        xh = self.x_proj(self.x_layernorm(x))
 
-        rbfh = self.rbf_proj(edge_rbf) # hidden_channels -> hidden_channels * 3, radial embedding info
-        weight = self.dir_proj(weight) # 3 * hidden_channels + num_radial -> hidden_channels * 3, edge weights
-        rbfh = rbfh * weight # hidden_channels * 3, info of edges
+        rbfh = self.rbf_proj(edge_rbf)
+        weight = self.dir_proj(weight)
+        rbfh = rbfh * weight
         # propagate_type: (xh: Tensor, vec: Tensor, rbfh_ij: Tensor, r_ij: Tensor)
         dx, dvec = self.propagate(
             edge_index,
@@ -154,8 +142,7 @@ class EquiMessagePassing(MessagePassing):
         return dx, dvec
 
     def message(self, xh_j, vec_j, rbfh_ij, r_ij):
-        """"""
-        x, xh2, xh3 = torch.split(xh_j * rbfh_ij, self.hidden_channels, dim=-1) # xh_j: xh[j]
+        x, xh2, xh3 = torch.split(xh_j * rbfh_ij, self.hidden_channels, dim=-1)
         xh2 = xh2 * self.inv_sqrt_3
 
         vec = vec_j * xh2.unsqueeze(1) + xh3.unsqueeze(1) * r_ij.unsqueeze(2)
@@ -206,6 +193,9 @@ class FTE(nn.Module):
     def forward(self, x, vec, node_frame):
         vec = self.vec_proj(vec)
         vec1, vec2 = torch.split(vec, self.hidden_channels, dim=-1)
+
+        # # # scalrization = torch.sum(vec1.unsqueeze(2) * node_frame.unsqueeze(-1), dim=1)
+        # # # scalrization[:, 1, :] = torch.abs(scalrization[:, 1, :].clone())
         scalar = torch.sqrt(torch.sum(vec1**2, dim=-2) + 1e-10)
 
         vec_dot = (vec1 * vec2).sum(dim=1)
@@ -299,7 +289,8 @@ class GatedEquivariantBlock(nn.Module):
         x = self.act(x)
         return x, v
 
-class LEFTNetProp(nn.Module):
+
+class LEFTNetZ(nn.Module):
     def __init__(
         self,
         bond_feat_dim,
@@ -317,9 +308,8 @@ class LEFTNetProp(nn.Module):
         y_mean=0,
         y_std=1,
         eps=1e-10,
-        dropout=0.5
     ):
-        super(LEFTNetProp, self).__init__()
+        super(LEFTNetZ, self).__init__()
         self.y_std = y_std
         self.y_mean = y_mean
         self.eps = eps
@@ -336,13 +326,10 @@ class LEFTNetProp(nn.Module):
 
         self.z_emb_ln = nn.LayerNorm(hidden_channels, elementwise_affine=False)
         self.z_emb = Embedding(95, hidden_channels)
-        self.dropout = nn.Dropout(p=dropout)
 
         self.radial_emb = rbf_emb(num_radial, cutoff)
         self.radial_lin = nn.Sequential(
-            nn.Linear(num_radial, hidden_channels), 
-            nn.SiLU(inplace=True), 
-            nn.Linear(hidden_channels, hidden_channels)
+            nn.Linear(num_radial, hidden_channels), nn.SiLU(inplace=True), nn.Linear(hidden_channels, hidden_channels)
         )
 
         self.neighbor_emb = NeighborEmb(hidden_channels)
@@ -364,6 +351,7 @@ class LEFTNetProp(nn.Module):
             self.num_targets = output_dim
 
         self.last_layer = nn.Linear(hidden_channels, self.num_targets)
+        # self.out_forces = EquiOutput(hidden_channels)
 
         # for node-wise frame
         self.mean_neighbor_pos = aggregate_pos(aggr="mean")
@@ -380,6 +368,7 @@ class LEFTNetProp(nn.Module):
         for layer in self.FTEs:
             layer.reset_parameters()
         self.last_layer.reset_parameters()
+        # self.out_forces.reset_parameters()
         for layer in self.radial_lin:
             if hasattr(layer, "reset_parameters"):
                 layer.reset_parameters()
@@ -392,28 +381,24 @@ class LEFTNetProp(nn.Module):
         device = next(self.parameters()).device
         pos = data.positions.to(device)
         batch = data.batch_idx.to(device)
-        z = data.atom_fea.to(device)
+        z = data.atom_num.long().to(device)
 
         edge_index = radius_graph(pos, r=self.cutoff, batch=batch, max_num_neighbors=1000)
-        edge_index = edge_index.to(device)
-
         j, i = edge_index
         vecs = pos[j] - pos[i]
-        dist = vecs.norm(dim=-1) # scalar distance between atom i and j, length: num_edges
+        dist = vecs.norm(dim=-1)
 
-        radial_emb = self.radial_emb(dist) # RBF, shape: (num_edges, num_radial=32), embedding for raw distance
-        radial_hidden = self.radial_lin(radial_emb) # MLP
-        rbounds = 0.5 * (torch.cos(dist * pi / self.cutoff) + 1.0) # for soft cutoff, smooth decay, value closer to 1 means stronger relationship, closer to 0 means weaker
+        # embed z
+        z_emb = self.z_emb_ln(self.z_emb(z))
 
-        radial_emb = radial_emb.to(device)
-        radial_hidden = radial_hidden.to(device)
-        rbounds = rbounds.to(device)
-
-        radial_hidden = rbounds.unsqueeze(-1) * radial_hidden # further stengthen the representation of radial_emb
+        radial_emb = self.radial_emb(dist)
+        radial_hidden = self.radial_lin(radial_emb)
+        rbounds = 0.5 * (torch.cos(dist * pi / self.cutoff) + 1.0)
+        radial_hidden = rbounds.unsqueeze(-1) * radial_hidden
 
         # init invariant node features
         # shape: (num_nodes, hidden_channels)
-        s = self.neighbor_emb(z, edge_index, radial_hidden) # z (num_nodes, atom_encoding), z_emb (num_nodes, hidden_channels); s=z_emb+neighbor_emb, shape: (num_nodes, hidden_channels)
+        s = self.neighbor_emb(z, z_emb, edge_index, radial_hidden)
 
         # init equivariant node features
         # shape: (num_nodes, 3, hidden_channels)
@@ -421,55 +406,49 @@ class LEFTNetProp(nn.Module):
 
         # bulid edge-wise frame
         edge_diff = vecs
-        edge_diff = edge_diff / (dist.unsqueeze(1) + self.eps) # normalize the edge_diff
+        edge_diff = edge_diff / (dist.unsqueeze(1) + self.eps)
         # noise = torch.clip(torch.empty(1,3).to(z.device).normal_(mean=0.0, std=0.1), min=-0.1, max=0.1)
         edge_cross = torch.cross(pos[i], pos[j])
         edge_cross = edge_cross / ((torch.sqrt(torch.sum((edge_cross) ** 2, 1).unsqueeze(1))) + self.eps)
         edge_vertical = torch.cross(edge_diff, edge_cross)
         # shape: (num_edges, 3, 3)
-        edge_frame = torch.cat((edge_diff.unsqueeze(-1), edge_cross.unsqueeze(-1), edge_vertical.unsqueeze(-1)), dim=-1) # normalised edge, edge_cross, edge_vertical
+        edge_frame = torch.cat((edge_diff.unsqueeze(-1), edge_cross.unsqueeze(-1), edge_vertical.unsqueeze(-1)), dim=-1)
 
         node_frame = 0
 
         # LSE: local 3D substructure encoding
-        # input: S_i_j, F_i_j
         # S_i_j shape: (num_nodes, 3, hidden_channels)
-        # F_i_j: edge_frame (num_edges, 3, 3), for each edge, 3x3 frame
-        S_i_j = self.S_vector(s, edge_diff.unsqueeze(-1), edge_index, radial_hidden) # TODO: how this works?
-        # S_i_j aggregates information from neighbors, weighted by radial_hidden the edge features. Propagate the features with edges of graph.
+        S_i_j = self.S_vector(s, edge_diff.unsqueeze(-1), edge_index, radial_hidden)
         scalrization1 = torch.sum(S_i_j[i].unsqueeze(2) * edge_frame.unsqueeze(-1), dim=1)
         scalrization2 = torch.sum(S_i_j[j].unsqueeze(2) * edge_frame.unsqueeze(-1), dim=1)
-        scalrization1[:, 1, :] = torch.abs(scalrization1[:, 1, :].clone()) # for the perpendicular vector direction not matter
+        scalrization1[:, 1, :] = torch.abs(scalrization1[:, 1, :].clone())
         scalrization2[:, 1, :] = torch.abs(scalrization2[:, 1, :].clone())
 
         scalar3 = (
-            self.lin(torch.permute(scalrization1, (0, 2, 1)))    # shape: (num_edges, hidden_channels, 3), transformation over 3 components
-            + torch.permute(scalrization1, (0, 2, 1))[:, :, 0].unsqueeze(2)  #extract the first component edge_diff
+            self.lin(torch.permute(scalrization1, (0, 2, 1)))
+            + torch.permute(scalrization1, (0, 2, 1))[:, :, 0].unsqueeze(2)
         ).squeeze(-1)
         scalar4 = (
             self.lin(torch.permute(scalrization2, (0, 2, 1)))
             + torch.permute(scalrization2, (0, 2, 1))[:, :, 0].unsqueeze(2)
         ).squeeze(-1)
 
-        edge_weight = torch.cat((scalar3, scalar4), dim=-1) * rbounds.unsqueeze(-1) # A_i_j
-        edge_weight = torch.cat((edge_weight, radial_hidden, radial_emb), dim=-1) # A_i_j
+        edge_weight = torch.cat((scalar3, scalar4), dim=-1) * rbounds.unsqueeze(-1)
+        edge_weight = torch.cat((edge_weight, radial_hidden, radial_emb), dim=-1)
 
-        for i in range(self.num_layers):
-        # for i in range(1):
-            # equivariant message passing
-            ds, dvec = self.message_layers[i](
-                s, vec, edge_index, radial_emb, edge_weight, edge_diff
-            ) # s, vec invariant and equivariant node features respectively
+        # for i in range(self.num_layers):
+        for i in range(1):
+            ds, dvec = self.message_layers[i](s, vec, edge_index, radial_emb, edge_weight, edge_diff)
 
             s = s + ds
             vec = vec + dvec
 
             # FTE: frame transition encoding
             ds, dvec = self.FTEs[i](s, vec, node_frame)
+
             s = s + ds
             vec = vec + dvec
 
-        # s = self.dropout(s)
         s = self.last_layer(s)
         s = scatter(s, batch, dim=0, reduce=self.readout)
         s = s * self.y_std + self.y_mean
@@ -481,6 +460,3 @@ class LEFTNetProp(nn.Module):
     @property
     def num_params(self):
         return sum(p.numel() for p in self.parameters())
-    
-
-    

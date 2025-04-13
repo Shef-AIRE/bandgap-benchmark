@@ -2,7 +2,7 @@ import os
 import subprocess
 
 # Define the base folder paths
-base_checkpoint_folder = "saved_models/ablation_filtered_data/cartnet"
+base_checkpoint_folder = "saved_models/cartnet"
 base_test_data_folder = "data/data_by_type"
 config_folder = "configs/configs_by_category/filtered_data_cartnet"
 

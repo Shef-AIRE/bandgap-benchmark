@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 from trainer import MaterialsTrainer
-from pipeline.leftnet.leftnet_prop import LEFTNetProp
-from pipeline.leftnet.leftnet_z import LEFTNetZ
+from models.leftnet.leftnet_prop import LEFTNetProp
+from models.leftnet.leftnet_z import LEFTNetZ
 
 
 def get_config(cfg):

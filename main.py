@@ -19,12 +19,12 @@ from torch.utils.data import DataLoader
 from sklearn.utils import shuffle
 import random
 
-from dataloader import extract_features
-from pipeline.cgcnn.model_cgcnn import get_cgcnn_model
+from loaddata.dataloader import extract_features
+from models.cgcnn.model_cgcnn import get_cgcnn_model
 from loaddata.cifdata import CIFData
 from loaddata.collate import collate_pool_leftnet
-from pipeline.leftnet.model_leftnet import get_leftnet_model
-from pipeline.cartnet.model_cartnet import get_cartnet_model
+from models.leftnet.model_leftnet import get_leftnet_model
+from models.cartnet.model_cartnet import get_cartnet_model
 from trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
 

@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import torch
 
-from pipeline.cartnet.CartNet import CartNet
+from models.cartnet.CartNet import CartNet
 from trainer import MaterialsTrainer
 
 

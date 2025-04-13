@@ -1,6 +1,6 @@
 DATASET:
- TRAIN: 'data/filtered_data/train_data.json'
- VAL: 'data/filtered_data/test_data.json'
+ TRAIN: 'data/fine_tune/train_data.json'
+ VAL: 'data/fine_tune/test_data.json'
 
 MODEL:
   NAME: 'linear_regression'
