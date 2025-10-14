@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import default_collate
+from typing import List
 
 
 def collate_pool_leftnet(dataset_list):
@@ -59,3 +60,22 @@ class BatchData:
         self.cif_ids = cif_ids
         self.batch_idx = batch_idx
         self.batch_size = len(cif_ids)
+
+
+def collate_chgnet(dataset_list):
+    """
+    Collate function for CHGNet that keeps the full Structure objects so they can
+    be converted to CrystalGraphs inside the model.
+    """
+    structures: List = [item.structure for item in dataset_list]
+    targets = torch.stack([item.target for item in dataset_list], dim=0)
+    cif_ids = [item.cif_id for item in dataset_list]
+    return CHGNetBatch(structures=structures, target=targets, cif_ids=cif_ids)
+
+
+class CHGNetBatch:
+    def __init__(self, structures, target, cif_ids):
+        self.structures = structures
+        self.target = target
+        self.cif_ids = cif_ids
+        self.batch_size = len(structures)

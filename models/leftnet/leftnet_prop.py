@@ -7,10 +7,11 @@ from typing import Optional, Tuple
 import torch
 from torch import nn
 from torch.nn import Embedding
-from torch.xpu import device
+# from torch.xpu import device
 from torch_geometric.nn import radius_graph
 from torch_geometric.nn.conv import MessagePassing
-from torch_scatter import scatter
+# from torch_scatter import scatter
+import torch_scatter
 
 def swish(x):
     return x * torch.sigmoid(x)
@@ -172,8 +173,8 @@ class EquiMessagePassing(MessagePassing):
         dim_size: Optional[int],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         x, vec = features
-        x = scatter(x, index, dim=self.node_dim, dim_size=dim_size)
-        vec = scatter(vec, index, dim=self.node_dim, dim_size=dim_size)
+        x = torch_scatter.scatter(x, index, dim=self.node_dim, dim_size=dim_size)
+        vec = torch_scatter.scatter(vec, index, dim=self.node_dim, dim_size=dim_size)
         return x, vec
 
     def update(self, inputs: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -472,7 +473,7 @@ class LEFTNetProp(nn.Module):
 
         # s = self.dropout(s)
         s = self.last_layer(s)
-        s = scatter(s, batch, dim=0, reduce=self.readout)
+        s = torch_scatter.scatter(s, batch, dim=0, reduce=self.readout)
         s = s * self.y_std + self.y_mean
         return s
 

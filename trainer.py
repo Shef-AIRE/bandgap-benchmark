@@ -107,6 +107,10 @@ class MaterialsTrainer(pl.LightningModule):
                 - 'embedding': Freeze only embedding-related layers.
                 - 'none': Do not freeze any layers.
         """
+        if mode == 'none':
+            print("Layer freezing disabled.")
+            return
+
         model_name = self.model.__class__.__name__.lower()
 
         # Handle LEFTNet-specific logic
@@ -178,7 +182,7 @@ class MaterialsTrainer(pl.LightningModule):
             print(f'LAYERS FREEZED MODE: {mode.upper()} for {self.model.__class__.__name__}')
             return
 
-        # Skip layer freezing for CartNet
+        # Handle CartNet-specific logic
         elif "cartnet" in model_name:
             print(f"Skipping layer freezing for CartNet: {self.model.__class__.__name__}")
             return
