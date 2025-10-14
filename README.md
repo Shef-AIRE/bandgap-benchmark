@@ -1,9 +1,8 @@
-### bandgap-benchmark
-Code for "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data"
+# Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data
 
-This repository contains the PyTorch Lightning implementation of the benchmark that described in our paper "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data". We compiled a new multimodal, multi-idelity dataset from the Materials Project and BandgapDatabase1, consisting of 60,218 low-fidelity computational band gaps and 1,183 high-fidelity experimental band gaps. We evaluated seven ML models, including three traditioanl methods (linear regression, random forest regression and support vector regression) and four GNN (CGCNN, CartNet, LEFTNet-Z and LEFTNet-Prop). 
+This repository contains the PyTorch Lightning implementation of the benchmark that described in our paper "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data". We compiled a new multimodal, multi-idelity dataset from the Materials Project and BandgapDatabase1, consisting of 60,218 low-fidelity computational band gaps and 1,183 high-fidelity experimental band gaps. We evaluated seven ML models, including three traditional methods (linear regression, random forest regression and support vector regression) and four GNNs (CGCNN, CartNet, LEFTNet-Z and LEFTNet-Prop). 
 
-### Repository Structure
+## Repository Structure
 `cif_file.zip` - Contains `.cif` files and the atomic encoding file used in the benchmark.
 
 `data/` - Directory containing MPIDs and corresponding band gap values:
@@ -20,7 +19,7 @@ This repository contains the PyTorch Lightning implementation of the benchmark t
 
 `saved_models` - Pretrained models.
 
-### Installation
+## Installation
 
 Install dependencies with:
 
@@ -28,7 +27,7 @@ Install dependencies with:
 pip install -r requirements.txt
 ```
 
-### Training
+## Training
 
 To train a model, use the following command (add `--pretrain` to perform pretraining only once instead of k-fold training):
 
