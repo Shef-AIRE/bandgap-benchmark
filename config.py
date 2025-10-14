@@ -42,7 +42,7 @@ _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 # Model paths and parameters
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
-_C.MODEL.NAME = "cgcnn" # Choices: ['cgcnn', 'leftnet', logistic', 'random_forest']
+_C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
 _C.MODEL.PRETRAINED_MODEL_PATH = ""
 _C.MODEL.CIF_FOLDER = "./cifs"
 _C.MODEL.INIT_FILE = "./init.json"
@@ -97,6 +97,35 @@ _C.CARTNET.INVARIANT = False  # Add appropriate default value
 _C.CARTNET.TEMPERATURE = False  # Add appropriate default value
 _C.CARTNET.USE_ENVELOPE = True  # Add appropriate default value
 _C.CARTNET.ATOM_TYPES = True  # Add appropriate default value
+
+
+# -----------------------------------------------------------------------------
+# CHGNet specific parameters
+# -----------------------------------------------------------------------------
+_C.CHGNET = CN()
+_C.CHGNET.ATOM_FEA_DIM = 64
+_C.CHGNET.BOND_FEA_DIM = 64
+_C.CHGNET.ANGLE_FEA_DIM = 64
+_C.CHGNET.NUM_RADIAL = 31
+_C.CHGNET.NUM_ANGULAR = 31
+_C.CHGNET.N_CONV = 4
+_C.CHGNET.ATOM_CONV_HIDDEN_DIM = 64
+_C.CHGNET.BOND_CONV_HIDDEN_DIM = 64
+_C.CHGNET.ANGLE_LAYER_HIDDEN_DIM = 0
+_C.CHGNET.CONV_DROPOUT = 0.0
+_C.CHGNET.READ_OUT = "ave"
+_C.CHGNET.MLP_HIDDEN_DIMS = (64, 64, 64)
+_C.CHGNET.MLP_DROPOUT = 0.0
+_C.CHGNET.MLP_FIRST = True
+_C.CHGNET.IS_INTENSIVE = True
+_C.CHGNET.NON_LINEARITY = "silu"
+_C.CHGNET.ATOM_GRAPH_CUTOFF = 6.0
+_C.CHGNET.BOND_GRAPH_CUTOFF = 3.0
+_C.CHGNET.GRAPH_CONVERTER_ALGORITHM = "fast"
+_C.CHGNET.CUTOFF_COEFF = 8
+_C.CHGNET.LEARNABLE_RBF = True
+_C.CHGNET.GMLP_NORM = "layer"
+_C.CHGNET.READOUT_NORM = "layer"
 
 
 # -----------------------------------------------------------------------------

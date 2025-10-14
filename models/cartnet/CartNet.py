@@ -9,7 +9,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.graphgym.config import cfg
 from torch_scatter import scatter
-from pipeline.cartnet.utils import ExpNormalSmearing, CosineCutoff
+from models.cartnet.utils import ExpNormalSmearing, CosineCutoff
 
 
 class CartNet(torch.nn.Module):

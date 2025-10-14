@@ -25,6 +25,7 @@ from loaddata.cifdata import CIFData
 from loaddata.collate import collate_pool_leftnet
 from models.leftnet.model_leftnet import get_leftnet_model
 from models.cartnet.model_cartnet import get_cartnet_model
+from models.CHGnet.model_chgnet import get_chgnet_model
 from trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
 
@@ -67,15 +68,20 @@ def prepare_datasets(cfg, train_fold, val_fold):
     val_dataset = CIFData(val_fold[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                           cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
 
+    if cfg.MODEL.NAME == "chgnet":
+        collate_fn = collate_pool_leftnet
+    else:
+        collate_fn = collate_pool_leftnet
+
     train_loader = DataLoader(
         train_dataset,
-        collate_fn=collate_pool_leftnet,
+        collate_fn=collate_fn,
         batch_size=cfg.SOLVER.BATCH_SIZE,
         num_workers=cfg.SOLVER.WORKERS,
     )
     val_loader = DataLoader(
         val_dataset,
-        collate_fn=collate_pool_leftnet,
+        collate_fn=collate_fn,
         batch_size=cfg.SOLVER.BATCH_SIZE,
         shuffle=False,
         num_workers=cfg.SOLVER.WORKERS
@@ -94,6 +100,8 @@ def set_random_seed(seed):
 def get_model(cfg):
     if cfg.MODEL.NAME == "cgcnn":
         return get_cgcnn_model(cfg)
+    elif cfg.MODEL.NAME == "chgnet":
+        return get_chgnet_model(cfg)
     elif cfg.MODEL.NAME == "leftnet":
         return get_leftnet_model(cfg)
     elif cfg.MODEL.NAME == "cartnet":
