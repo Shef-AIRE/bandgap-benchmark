@@ -42,13 +42,21 @@ _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 # Model paths and parameters
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
-_C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
+_C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'alignn', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
 _C.MODEL.PRETRAINED_MODEL_PATH = ""
 _C.MODEL.CIF_FOLDER = "./cifs"
 _C.MODEL.INIT_FILE = "./init.json"
 _C.MODEL.MAX_NBRS = 12
 _C.MODEL.RADIUS = 7.0
 
+
+# -----------------------------------------------------------------------------
+# Common model hyperparameters
+# -----------------------------------------------------------------------------
+_C.MODEL_COMMON = CN()
+_C.MODEL_COMMON.CUTOFF = 6.0
+_C.MODEL_COMMON.NUM_RADIAL = 32
+_C.MODEL_COMMON.OUTPUT_DIM = 1
 
 
 # -----------------------------------------------------------------------------
@@ -74,17 +82,29 @@ _C.CGCNN.POS_FEA_LEN = 3
 # LeftNet configs
 # -----------------------------------------------------------------------------
 _C.LEFTNET = CN()
-_C.LEFTNET.CUTOFF = 6.0
 _C.LEFTNET.HIDDEN_CHANNELS = 128
 _C.LEFTNET.NUM_LAYERS = 4
 
-_C.LEFTNET.NUM_RADIAL = 32
 _C.LEFTNET.REGRESS_FORCES = False
 _C.LEFTNET.USE_PBC = True
 _C.LEFTNET.OTF_GRAPH = False
-_C.LEFTNET.OUTPUT_DIM = 1
 _C.LEFTNET.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
 _C.LEFTNET.ENCODING = "none" # Choices: ['one-hot', 'none'], none for LEFTNet-Z, one-hot for LEFTNet-Prop
+
+# -----------------------------------------------------------------------------
+# ALIGNN specific parameters
+# -----------------------------------------------------------------------------
+_C.ALIGNN = CN()
+_C.ALIGNN.ATOM_FEA_LEN = 92
+_C.ALIGNN.HIDDEN_DIM = 128
+_C.ALIGNN.NUM_LAYERS = 4
+_C.ALIGNN.NUM_RBF = None
+_C.ALIGNN.DROPOUT = 0.0
+_C.ALIGNN.READOUT = "mean"  # Choices: ['mean', 'sum', 'max']
+_C.ALIGNN.MAX_NEIGHBORS = 1000
+_C.ALIGNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
+_C.ALIGNN.ACTIVATION = "silu"
+_C.ALIGNN.RBF_TRAINABLE = False
 
 # -----------------------------------------------------------------------------
 # CARTNET specific parameters

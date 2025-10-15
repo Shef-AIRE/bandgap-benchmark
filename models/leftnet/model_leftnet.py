@@ -11,16 +11,22 @@ def get_config(cfg):
     Args:
         cfg: A YACS config object.
     """
+    common_cfg = cfg.MODEL_COMMON
+    leftnet_cfg = cfg.LEFTNET
+    cutoff = leftnet_cfg["CUTOFF"] if "CUTOFF" in leftnet_cfg else common_cfg.CUTOFF
+    num_radial = leftnet_cfg["NUM_RADIAL"] if "NUM_RADIAL" in leftnet_cfg else common_cfg.NUM_RADIAL
+    output_dim = leftnet_cfg["OUTPUT_DIM"] if "OUTPUT_DIM" in leftnet_cfg else common_cfg.OUTPUT_DIM
+
     config_params = {
         "leftnet_params": {
-            "cutoff": cfg.LEFTNET.CUTOFF,
+            "cutoff": cutoff,
             "hidden_channels": cfg.LEFTNET.HIDDEN_CHANNELS,
             "num_layers": cfg.LEFTNET.NUM_LAYERS,
-            "num_radial": cfg.LEFTNET.NUM_RADIAL,
+            "num_radial": num_radial,
             "regress_forces": cfg.LEFTNET.REGRESS_FORCES,
             "use_pbc": cfg.LEFTNET.USE_PBC,
             "otf_graph": cfg.LEFTNET.OTF_GRAPH,
-            "output_dim": cfg.LEFTNET.OUTPUT_DIM,
+            "output_dim": output_dim,
         },
         "train_params": {
             "init_lr": cfg.SOLVER.LR,

@@ -116,52 +116,6 @@ class RadialBessel(torch.nn.Module):
         return out
 
 
-class GaussianExpansion(nn.Module):
-    """Expands the distance by Gaussian basis.
-    Unit: angstrom.
-    """
-
-    def __init__(
-        self,
-        min: float = 0,  # noqa: A002
-        max: float = 5,  # noqa: A002
-        step: float = 0.5,
-        var: float | None = None,
-    ) -> None:
-        """Gaussian Expansion
-        expand a scalar feature to a soft-one-hot feature vector.
-
-        Args:
-            min (float): minimum Gaussian center value
-            max (float): maximum Gaussian center value
-            step (float): Step size between the Gaussian centers
-            var (float): variance in gaussian filter, default to step
-        """
-        super().__init__()
-        if min >= max:
-            raise ValueError(f"{min=} must be less than {max=}")
-        if max - min <= step:
-            raise ValueError(f"{max - min=} must be greater than {step=}")
-        self.register_buffer("gaussian_centers", torch.arange(min, max + step, step))
-        self.var = var or step
-        if self.var <= 0:
-            raise ValueError(f"{var=} must be positive")
-
-    def expand(self, features: Tensor) -> Tensor:
-        """Apply Gaussian filter to a feature Tensor.
-
-        Args:
-            features (Tensor): tensor of features [n]
-
-        Returns:
-            expanded features (Tensor): tensor of Gaussian distances [n, dim]
-            where the expanded dimension will be (dmax - dmin) / step + 1
-        """
-        return torch.exp(
-            -((features.reshape(-1, 1) - self.gaussian_centers) ** 2) / self.var**2
-        )
-
-
 class CutoffPolynomial(nn.Module):
     """Polynomial soft-cutoff function for atom graph
     ref: https://github.com/TUM-DAML/gemnet_pytorch/blob/-/gemnet/model/layers/envelope.py.
