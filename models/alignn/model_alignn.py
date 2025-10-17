@@ -48,6 +48,8 @@ def get_config(cfg):
             "activation": alignn_cfg.ACTIVATION,
             "rbf_trainable": alignn_cfg.RBF_TRAINABLE,
             "max_neighbors": alignn_cfg.MAX_NEIGHBORS,
+            "encoding": alignn_cfg.ENCODING,
+            "max_num_elements": alignn_cfg.MAX_NUM_ELEMENTS,
         },
     }
 

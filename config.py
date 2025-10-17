@@ -105,6 +105,8 @@ _C.ALIGNN.MAX_NEIGHBORS = 1000
 _C.ALIGNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
 _C.ALIGNN.ACTIVATION = "silu"
 _C.ALIGNN.RBF_TRAINABLE = False
+_C.ALIGNN.ENCODING = "prop"  # Choices: ['prop', 'z']
+_C.ALIGNN.MAX_NUM_ELEMENTS = 94
 
 # -----------------------------------------------------------------------------
 # CARTNET specific parameters
@@ -146,6 +148,9 @@ _C.CHGNET.CUTOFF_COEFF = 8
 _C.CHGNET.LEARNABLE_RBF = True
 _C.CHGNET.GMLP_NORM = "layer"
 _C.CHGNET.READOUT_NORM = "layer"
+_C.CHGNET.ENCODING = "z"  # Choices: ['z', 'prop']
+_C.CHGNET.ATOM_INPUT_DIM = 92
+_C.CHGNET.MAX_NUM_ELEMENTS = 94
 
 
 # -----------------------------------------------------------------------------

@@ -74,16 +74,26 @@ class ALIGNNModel(nn.Module):
         activation: str = "silu",
         rbf_trainable: bool = False,
         max_neighbors: int = 1000,
+        encoding: Literal["prop", "z"] = "prop",
+        max_num_elements: int = 94,
     ) -> None:
         super().__init__()
+        if num_rbf is None:
+            raise ValueError("ALIGNNModel requires num_rbf to be specified.")
         self.cutoff = cutoff
         self.readout = readout
         self.max_neighbors = max_neighbors
+        self.encoding = encoding
+        self.max_num_elements = max_num_elements
+        self._activation = _activation_from_str(activation)
 
-        self.atom_encoder = nn.Sequential(
-            nn.Linear(atom_input_dim, hidden_dim),
-            _activation_from_str(activation),
-        )
+        if self.encoding == "prop":
+            self.atom_linear = nn.Linear(atom_input_dim, hidden_dim)
+            self.atom_embedding = None
+        else:
+            self.atom_embedding = nn.Embedding(max_num_elements, hidden_dim)
+            self.atom_linear = None
+
         self.encoder_norm = nn.LayerNorm(hidden_dim)
 
         self.radial_embedding = rbf_emb(num_rbf, cutoff, rbf_trainable=rbf_trainable)
@@ -108,11 +118,17 @@ class ALIGNNModel(nn.Module):
 
     def forward(self, data) -> Tensor:
         device = next(self.parameters()).device
-        atom_fea = data.atom_fea.to(device)
         pos = data.positions.to(device)
         batch = data.batch_idx.to(device)
 
-        x = self.atom_encoder(atom_fea)
+        if self.encoding == "prop":
+            atom_fea = data.atom_fea.to(device)
+            x = self._activation(self.atom_linear(atom_fea))
+        else:
+            atom_nums = data.atom_num.to(device).long() - 1
+            atom_nums = torch.clamp(atom_nums, min=0, max=self.max_num_elements - 1)
+            x = self._activation(self.atom_embedding(atom_nums))
+
         x = self.encoder_norm(x)
 
         edge_index = radius_graph(

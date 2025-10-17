@@ -192,9 +192,11 @@ class MaterialsTrainer(pl.LightningModule):
                 for param in self.model.parameters():
                     param.requires_grad = False
             elif mode == 'embedding':
-                if hasattr(self.model, 'atom_encoder'):
-                    for param in self.model.atom_encoder.parameters():
+                if hasattr(self.model, 'atom_linear') and self.model.atom_linear is not None:
+                    for param in self.model.atom_linear.parameters():
                         param.requires_grad = False
+                if hasattr(self.model, 'atom_embedding') and self.model.atom_embedding is not None:
+                    self.model.atom_embedding.weight.requires_grad = False
             elif mode != 'none':
                 raise ValueError("Invalid mode. Choose from 'all', 'embedding', or 'none'.")
             print(f'LAYERS FREEZED MODE: {mode.upper()} for {self.model.__class__.__name__}')

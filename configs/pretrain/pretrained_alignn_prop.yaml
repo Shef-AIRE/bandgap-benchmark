@@ -1,6 +1,6 @@
 DATASET:
-  TRAIN: "data/fine_tune/train_data.json"
-  VAL: "data/fine_tune/test_data.json"
+  TRAIN: "data/pretrain_data.json"
+  VAL: "data/filtered_data/test_data.json"
 
 MODEL:
   NAME: "alignn"
@@ -9,9 +9,9 @@ MODEL:
   CIF_FOLDER: "cif_file"
 
 SOLVER:
-  LR: 0.001
-  NUM_FOLDS: 2
-  EPOCHS: 2
+  LR: 0.01
+  NUM_FOLDS: 10
+  EPOCHS: 200
   NUM_RUNS: 1
   BATCH_SIZE: 32
 
@@ -19,17 +19,19 @@ ALIGNN:
   HIDDEN_DIM: 160
   NUM_LAYERS: 6
   NUM_RBF: 64
+  CUTOFF: 8.0
   DROPOUT: 0.05
   READOUT: "mean"
   ACTIVATION: "silu"
   RBF_TRAINABLE: False
   MAX_NEIGHBORS: 1000
-  ENCODING: "z"
+  ENCODING: "prop"
+  MAX_NUM_ELEMENTS: 94
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "pretrain/alignn"
+  LOG_DIR_NAME: "pretrain/alignn_prop"
 
 OUTPUT:
-  LOOP_RESULTS: "result/alignn_pretrain/loop_200epochs.csv"
-  PREDICTIONS: "result/alignn_pretrain/predict.csv"
+  LOOP_RESULTS: "result/alignn_prop_pretrain/loop.csv"
+  PREDICTIONS: "result/alignn_prop_pretrain/predict.csv"

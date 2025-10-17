@@ -70,6 +70,9 @@ def get_config(cfg) -> Dict[str, Any]:
         "learnable_rbf": cfg.CHGNET.LEARNABLE_RBF,
         "gMLP_norm": cfg.CHGNET.GMLP_NORM,
         "readout_norm": cfg.CHGNET.READOUT_NORM,
+        "encoding": cfg.CHGNET.ENCODING,
+        "atom_input_dim": cfg.CHGNET.ATOM_INPUT_DIM,
+        "max_num_elements": cfg.CHGNET.MAX_NUM_ELEMENTS,
     }
 
     return {

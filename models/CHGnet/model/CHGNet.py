@@ -10,7 +10,7 @@ from torch_geometric.nn import radius_graph
 
 from .composition_model import AtomRef
 from .encoders import AngleEncoder, AtomEmbedding, BondEncoder
-from .functions import GatedMLP, MLP, find_normalization
+from .functions import GatedMLP, MLP, find_activation, find_normalization
 from .layers import (
     AngleUpdate,
     AtomConv,
@@ -51,6 +51,9 @@ class CHGNet(nn.Module):
         learnable_rbf: bool = True,
         gMLP_norm: str | None = "layer",  # noqa: N803
         readout_norm: str | None = "layer",
+        encoding: Literal["z", "prop"] = "z",
+        atom_input_dim: int | None = 92,
+        max_num_elements: int = 94,
         version: str | None = None,
         **kwargs,
     ) -> None:
@@ -72,6 +75,9 @@ class CHGNet(nn.Module):
         self.bond_graph_cutoff = bond_graph_cutoff
         self.num_radial = num_radial
         self.num_angular = num_angular
+        self.encoding = encoding
+        self.atom_input_dim = atom_input_dim
+        self.max_num_elements = max_num_elements
 
         if isinstance(composition_model, nn.Module):
             self.composition_model = composition_model
@@ -86,7 +92,20 @@ class CHGNet(nn.Module):
                 param.requires_grad = False
 
         # Embedding layers
-        self.atom_embedding = AtomEmbedding(atom_feature_dim=atom_fea_dim)
+        if encoding == "prop":
+            if atom_input_dim is None:
+                raise ValueError("atom_input_dim must be specified when encoding='prop'.")
+            self.atom_prop_encoder = nn.Sequential(
+                nn.Linear(atom_input_dim, atom_fea_dim),
+                find_activation(non_linearity),
+            )
+            self.atom_embedding = None
+        else:
+            self.atom_embedding = AtomEmbedding(
+                atom_feature_dim=atom_fea_dim,
+                max_num_elements=max_num_elements,
+            )
+            self.atom_prop_encoder = None
         self.bond_basis_expansion = BondEncoder(
             atom_graph_cutoff=atom_graph_cutoff,
             bond_graph_cutoff=bond_graph_cutoff,
@@ -239,6 +258,14 @@ class CHGNet(nn.Module):
         if not hasattr(batch, "positions") or not hasattr(batch, "batch_idx"):
             raise TypeError("CHGNet expects a BatchData object with positions and batch_idx.")
 
+        dtype = self.bond_embedding.weight.dtype
+        device = next(self.parameters()).device
+        prop_atom_fea = None
+        if self.encoding == "prop":
+            if not hasattr(batch, "atom_fea"):
+                raise TypeError("BatchData must contain atom_fea when encoding='prop'.")
+            prop_atom_fea = batch.atom_fea.to(device=device, dtype=dtype)
+
         simple_graphs, graph = self._assemble_from_batch(batch)
 
         comp_energy = (
@@ -247,6 +274,7 @@ class CHGNet(nn.Module):
 
         prediction = self._compute(
             graph,
+            prop_atom_fea=prop_atom_fea,
             return_site_energies=return_site_energies,
             return_atom_feas=return_atom_feas,
             return_crystal_feas=return_crystal_feas,
@@ -485,6 +513,7 @@ class CHGNet(nn.Module):
         self,
         g,
         *,
+        prop_atom_fea: Tensor | None = None,
         return_site_energies: bool = False,
         return_atom_feas: bool = False,
         return_crystal_feas: bool = False,
@@ -493,7 +522,21 @@ class CHGNet(nn.Module):
         atoms_per_graph = torch.bincount(g.atom_owners)
         prediction["atoms_per_graph"] = atoms_per_graph
 
-        atom_feas = self.atom_embedding(g.atomic_numbers - 1)
+        dtype = self.bond_embedding.weight.dtype
+        device = g.atomic_numbers.device
+        if self.encoding == "prop":
+            if prop_atom_fea is None:
+                raise ValueError("prop_atom_fea must be provided when encoding='prop'.")
+            atom_inputs = prop_atom_fea.to(device=device, dtype=dtype)
+            atom_feas = self.atom_prop_encoder(atom_inputs)
+        else:
+            atom_indices = torch.clamp(
+                g.atomic_numbers.to(device=device, dtype=torch.long) - 1,
+                min=0,
+                max=self.max_num_elements - 1,
+            )
+            atom_feas = self.atom_embedding(atom_indices)
+
         bond_feas = self.bond_embedding(g.bond_bases_ag)
         bond_weights_ag = self.bond_weights_ag(g.bond_bases_ag)
         bond_weights_bg = self.bond_weights_bg(g.bond_bases_bg)
