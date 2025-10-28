@@ -12,6 +12,8 @@ _C.DATASET = CN()
 _C.DATASET.TRAIN = "data/ds1.json"
 _C.DATASET.VAL = "data/ds3.json"
 _C.DATASET.RATIO = 1.0 # Ratio of the dataset to use
+_C.DATASET.PREDEFINED_SPLIT = False
+_C.DATASET.SPLIT_GLOB = ""
 
 
 # -----------------------------------------------------------------------------
@@ -99,6 +101,7 @@ _C.ALIGNN.ATOM_FEA_LEN = 92
 _C.ALIGNN.HIDDEN_DIM = 128
 _C.ALIGNN.NUM_LAYERS = 4
 _C.ALIGNN.NUM_RBF = None
+_C.ALIGNN.CUTOFF = 6.0
 _C.ALIGNN.DROPOUT = 0.0
 _C.ALIGNN.READOUT = "mean"  # Choices: ['mean', 'sum', 'max']
 _C.ALIGNN.MAX_NEIGHBORS = 1000
