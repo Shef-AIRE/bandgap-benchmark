@@ -479,7 +479,7 @@ def main():
                 continue
 
             model = get_model(cfg)
-            if cfg.MODEL.NAME != "alignn":
+            if cfg.MODEL.NAME not in ("alignn", "chgnet"):
                 model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
 
             wandb_logger, log_dir = setup_logger(cfg, fold_label)

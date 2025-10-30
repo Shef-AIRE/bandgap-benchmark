@@ -41,7 +41,7 @@ CHGNET:
   LEARNABLE_RBF: True
   GMLP_NORM: "layer"
   READOUT_NORM: "layer"
-  ENCODING: "z"
+  ENCODING: "prop"
   ATOM_INPUT_DIM: 92
   MAX_NUM_ELEMENTS: 94
 

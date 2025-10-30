@@ -95,6 +95,11 @@ def get_chgnet_model(cfg):
         print(f"=> loading checkpoint '{pretrained_path}'")
         checkpoint = torch.load(pretrained_path, map_location="cpu")
         state_dict = checkpoint.get("state_dict", checkpoint)
+        if any(key.startswith("model.") for key in state_dict):
+            state_dict = {
+                key[len("model."):] if key.startswith("model.") else key: value
+                for key, value in state_dict.items()
+            }
         try:
             result = trainer.model.load_state_dict(state_dict, strict=False)
             missing_keys = getattr(result, "missing_keys", result[0])

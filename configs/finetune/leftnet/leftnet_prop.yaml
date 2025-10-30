@@ -1,6 +1,6 @@
 DATASET:
- TRAIN: 'data/fine_tune/train_data.json'
- VAL: 'data/fine_tune/test_data.json'
+ TRAIN: 'data/joint_dataset/train_data.json'
+ VAL: 'data/joint_dataset/test_data.json'
 
 MODEL:
   NAME: 'leftnet'
@@ -21,4 +21,3 @@ LEFTNET:
 LOGGING:
   LOG_DIR: "saved_models"
   LOG_DIR_NAME: "leftnet_prop"  
-
