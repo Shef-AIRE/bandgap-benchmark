@@ -50,6 +50,7 @@ _C.MODEL.CIF_FOLDER = "./cifs"
 _C.MODEL.INIT_FILE = "./init.json"
 _C.MODEL.MAX_NBRS = 12
 _C.MODEL.RADIUS = 7.0
+_C.MODEL.HYPERPARAMS = CN(new_allowed=True)
 
 
 # -----------------------------------------------------------------------------

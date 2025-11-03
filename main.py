@@ -31,6 +31,7 @@ from models.alignn.model_alignn import get_alignn_model
 from models.CHGnet.model_chgnet import get_chgnet_model
 from trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
+from traditional_ml import run_traditional_model
 
 
 def arg_parse():
@@ -124,7 +125,7 @@ def prepare_datasets(cfg, train_fold, val_fold):
         shuffle=False,
         num_workers=cfg.SOLVER.WORKERS
     )
-    return train_loader, val_loader, train_dataset
+    return train_loader, val_loader, train_dataset, val_dataset
 
 
 def set_random_seed(seed):
@@ -298,7 +299,7 @@ def main():
                 cfg.DATASET.VAL = spec["val_path"]
                 cfg.freeze()
 
-                train_loader, val_loader, train_dataset = prepare_datasets(cfg, spec["train_df"], spec["val_df"])
+                train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, spec["train_df"], spec["val_df"])
 
                 structures = train_dataset[0]
                 cfg.defrost()
@@ -338,7 +339,7 @@ def main():
             train_idx, val_idx = next(kf.split(train_data))
             train_fold = train_data.iloc[train_idx]
             val_fold = train_data.iloc[val_idx]
-            train_loader, val_loader, train_dataset = prepare_datasets(cfg, train_fold, val_fold)
+            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, train_fold, val_fold)
 
             # Extract feature dimensions
             structures = train_dataset[0]
@@ -406,7 +407,7 @@ def main():
                 cfg.freeze()
 
             # Prepare datasets and loaders
-            train_loader, val_loader, train_dataset = prepare_datasets(cfg, train_fold, val_fold)
+            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, train_fold, val_fold)
 
             structures = train_dataset[0]  # for just one of the item in cifs
             orig_atom_fea_len = structures.atom_fea.shape[-1]
@@ -422,60 +423,44 @@ def main():
 
             if cfg.MODEL.NAME in ["random_forest", "linear_regression", "svm"]:
                 print(f"Training {cfg.MODEL.NAME} model...")
-                X_train, y_train = extract_features(train_dataset)
-                X_val, y_val = extract_features(val_dataset)
+                test_dataset = None
+                if cfg.DATASET.VAL and os.path.exists(cfg.DATASET.VAL):
+                    test_df = load_json_as_dataframe(cfg.DATASET.VAL)
+                    test_dataset = CIFData(
+                        test_df[['mpids', 'bg']],
+                        cfg.MODEL.CIF_FOLDER,
+                        cfg.MODEL.INIT_FILE,
+                        cfg.MODEL.MAX_NBRS,
+                        cfg.MODEL.RADIUS,
+                        cfg.SOLVER.RANDOMIZE,
+                    )
 
-                if cfg.MODEL.NAME == "random_forest":
-                    model = RandomForestRegressor(n_estimators=100, random_state=cfg.SOLVER.SEED)
-                elif cfg.MODEL.NAME == "linear_regression":
-                    model = LinearRegression()
-                elif cfg.MODEL.NAME == "svm":
-                    model = SVR()
-
-                model.fit(X_train, y_train)
-
-                relative_error_scorer = make_scorer(mean_relative_error, greater_is_better=False)
-                result = permutation_importance(
-                    estimator=model,
-                    X=X_val,
-                    y=y_val,
-                    scoring=relative_error_scorer,
-                    n_repeats=10,
-                    random_state=cfg.SOLVER.SEED
+                results = run_traditional_model(
+                    cfg,
+                    train_dataset,
+                    val_dataset,
+                    fold_label,
+                    test_dataset=test_dataset,
                 )
 
-                importances_mean = result.importances_mean
-                feature_importances_file = os.path.join(cfg.LOGGING.LOG_DIR, f"feature_importances_fold_{fold + 1}.txt")
+                best_params = results.get("best_params")
+                if best_params:
+                    print(f"{fold_label} best params: {best_params}")
 
-                # Ensure directory exists
-                os.makedirs(cfg.LOGGING.LOG_DIR, exist_ok=True)
+                val_metrics = results["val_metrics"]
+                print(
+                    f"{fold_label} {cfg.MODEL.NAME} Validation Result- "
+                    f"MAE: {val_metrics['mae']}, MSE: {val_metrics['mse']}, "
+                    f"MRE: {val_metrics['mre']}, R²: {val_metrics['r2']}"
+                )
 
-                with open(feature_importances_file, 'w') as f:
-                    f.write("Feature Importances:\n")
-                    for i, imp in enumerate(importances_mean):
-                        f.write(f"Feature {i:2d}: {imp}\n")
-
-                val_predictions = model.predict(X_val)
-                mae = mean_absolute_error(y_val, val_predictions)
-                mse = mean_squared_error(y_val, val_predictions)
-                mre = np.mean(np.abs((y_val - val_predictions) / y_val))
-                r2 = r2_score(y_val, val_predictions)
-                print(f"Fold {fold + 1} {cfg.MODEL.NAME} Validation Result- MAE: {mae:}, MSE: {mse:}, MRE: {mre:}, R²: {r2:}")
-
-                if cfg.DATASET.VAL:
-                    with open(cfg.DATASET.VAL, 'r') as f:
-                        test_data = json.load(f)
-                        test_data = pd.DataFrame.from_dict(test_data, orient='index').reset_index()
-                        test_data.rename(columns={'index': 'mpids'}, inplace=True)
-                    test_dataset = CIFData(test_data[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
-                                           cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
-                    X_test, y_test = extract_features(test_dataset)
-                    test_predictions = model.predict(X_test)
-                    test_mae = mean_absolute_error(y_test, test_predictions)
-                    test_mse = mean_squared_error(y_test, test_predictions)
-                    test_mre = np.mean(np.abs((y_test - test_predictions) / y_test))
-                    test_r2 = r2_score(y_test, test_predictions)
-                    print(f"Fold {fold + 1} {cfg.MODEL.NAME} Test Result- MAE: {test_mae:}, MSE: {test_mse:}, MRE: {test_mre:}, R²: {test_r2:}")
+                test_metrics = results.get("test_metrics")
+                if test_metrics:
+                    print(
+                        f"{fold_label} {cfg.MODEL.NAME} Test Result- "
+                        f"MAE: {test_metrics['mae']}, MSE: {test_metrics['mse']}, "
+                        f"MRE: {test_metrics['mre']}, R²: {test_metrics['r2']}"
+                    )
                 continue
 
             model = get_model(cfg)

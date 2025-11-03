@@ -1,0 +1,50 @@
+DATASET:
+  TRAIN: ""
+  VAL: ""
+  PREDEFINED_SPLIT: True
+  SPLIT_GLOB: "data/split_by_category/*.train.json"
+
+MODEL:
+  NAME: "chgnet"
+  PRETRAINED_MODEL_PATH: "saved_models/chgnet_prop_cutoff5/best-mre-epoch=34-val_mre=0.2879.ckpt"
+  INIT_FILE: "cif_file/atom_init.json"
+  CIF_FOLDER: "cif_file"
+
+SOLVER:
+  LR: 0.001
+  NUM_FOLDS: 10
+  EPOCHS: 50
+  NUM_RUNS: 1
+  BATCH_SIZE: 32
+
+CHGNET:
+  ATOM_FEA_DIM: 64
+  BOND_FEA_DIM: 64
+  ANGLE_FEA_DIM: 64
+  NUM_RADIAL: 31
+  NUM_ANGULAR: 31
+  N_CONV: 4
+  ATOM_CONV_HIDDEN_DIM: 64
+  BOND_CONV_HIDDEN_DIM: 64
+  ANGLE_LAYER_HIDDEN_DIM: 0
+  CONV_DROPOUT: 0.0
+  READ_OUT: "ave"
+  MLP_HIDDEN_DIMS: (64, 64, 64)
+  MLP_DROPOUT: 0.0
+  MLP_FIRST: True
+  IS_INTENSIVE: True
+  NON_LINEARITY: "silu"
+  ATOM_GRAPH_CUTOFF: 6.0
+  BOND_GRAPH_CUTOFF: 3.0
+  GRAPH_CONVERTER_ALGORITHM: "fast"
+  CUTOFF_COEFF: 8
+  LEARNABLE_RBF: True
+  GMLP_NORM: "layer"
+  READOUT_NORM: "layer"
+  ENCODING: "prop"
+  ATOM_INPUT_DIM: 92
+  MAX_NUM_ELEMENTS: 94
+
+LOGGING:
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "split_by_category/chgnet_prop"

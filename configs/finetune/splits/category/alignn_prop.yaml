@@ -1,17 +1,19 @@
 DATASET:
-  TRAIN: "data/pretrain_data.json"
-  VAL: "data/fine_tune/test_data.json"
+  TRAIN: ""
+  VAL: ""
+  PREDEFINED_SPLIT: True
+  SPLIT_GLOB: "data/split_by_category/*.train.json"
 
 MODEL:
   NAME: "alignn"
-  PRETRAINED_MODEL_PATH: ""
+  PRETRAINED_MODEL_PATH: "saved_models/alignn_prop/best-mre-epoch=194-val_mre=0.2759.ckpt"
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 SOLVER:
-  LR: 0.005
+  LR: 0.001
   NUM_FOLDS: 10
-  EPOCHS: 200
+  EPOCHS: 50
   NUM_RUNS: 1
   BATCH_SIZE: 32
 
@@ -24,12 +26,9 @@ ALIGNN:
   ACTIVATION: "silu"
   RBF_TRAINABLE: False
   MAX_NEIGHBORS: 1000
-  ENCODING: "z"
+  ENCODING: "prop"
+  MAX_NUM_ELEMENTS: 94
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "pretrain/alignn"
-
-OUTPUT:
-  LOOP_RESULTS: "result/alignn_pretrain/loop_200epochs.csv"
-  PREDICTIONS: "result/alignn_pretrain/predict.csv"
+  LOG_DIR_NAME: "split_by_category/alignn_prop"
