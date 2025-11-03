@@ -1,17 +1,17 @@
 DATASET:
-  TRAIN: "data/fine_tune/train_data.json"
-  VAL: "data/fine_tune/test_data.json"
+  TRAIN: 'data/fine_tune/train_data.json'
+  VAL: 'data/fine_tune/test_data.json'
 
 MODEL:
-  NAME: "chgnet"
-  PRETRAINED_MODEL_PATH: "saved_models/chgnet_prop_cutoff5/best-mre-epoch=34-val_mre=0.2879.ckpt"
-  INIT_FILE: "cif_file/atom_init.json"
-  CIF_FOLDER: "cif_file"
+  NAME: 'chgnet'
+  PRETRAINED_MODEL_PATH: ''
+  INIT_FILE: 'cif_file/atom_init.json'
+  CIF_FOLDER: 'cif_file'
 
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
-  EPOCHS: 20
+  EPOCHS: 100
   NUM_RUNS: 1
   BATCH_SIZE: 32
 
@@ -26,23 +26,23 @@ CHGNET:
   BOND_CONV_HIDDEN_DIM: 64
   ANGLE_LAYER_HIDDEN_DIM: 0
   CONV_DROPOUT: 0.0
-  READ_OUT: "ave"
+  READ_OUT: 'ave'
   MLP_HIDDEN_DIMS: (64, 64, 64)
   MLP_DROPOUT: 0.0
   MLP_FIRST: True
   IS_INTENSIVE: True
-  NON_LINEARITY: "silu"
+  NON_LINEARITY: 'silu'
   ATOM_GRAPH_CUTOFF: 6.0
   BOND_GRAPH_CUTOFF: 3.0
-  GRAPH_CONVERTER_ALGORITHM: "fast"
+  GRAPH_CONVERTER_ALGORITHM: 'fast'
   CUTOFF_COEFF: 8
   LEARNABLE_RBF: True
-  GMLP_NORM: "layer"
-  READOUT_NORM: "layer"
-  ENCODING: "prop"
+  GMLP_NORM: 'layer'
+  READOUT_NORM: 'layer'
+  ENCODING: 'z'
   ATOM_INPUT_DIM: 92
   MAX_NUM_ELEMENTS: 94
 
 LOGGING:
-  LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "finetune/chgnet_prop"
+  LOG_DIR: 'saved_models'
+  LOG_DIR_NAME: 'train_from_scratch/chgnet'
