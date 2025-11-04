@@ -9,5 +9,5 @@ MODEL:
   CIF_FOLDER: "cif_file"
 
 LOGGING:
-  LOG_DIR: "saved_models/lr_test_new_data"
-  LOG_DIR_NAME: "lr_test_new_data"
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "train_from_scratch/lr"

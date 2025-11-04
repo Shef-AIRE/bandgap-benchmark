@@ -10,5 +10,5 @@ MODEL:
 
 
 LOGGING:
-  LOG_DIR: "saved_models/svr_test"
-  LOG_DIR_NAME: "svr_test"
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "train_from_scratch/svr"

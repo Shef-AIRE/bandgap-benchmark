@@ -18,4 +18,4 @@ SOLVER:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "leftnet_z"
+  LOG_DIR_NAME: "train_from_scratch/leftnet_z"
