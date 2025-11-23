@@ -3,7 +3,7 @@ DATASET:
   VAL: "data/fine_tune/test_data.json"
 
 MODEL:
-  NAME: "alignn"
+  NAME: "alignn_old"
   PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
@@ -13,29 +13,24 @@ SOLVER:
   NUM_FOLDS: 10
   EPOCHS: 200
   NUM_RUNS: 1
-  BATCH_SIZE: 64
+  BATCH_SIZE: 32
 
 ALIGNN:
-  HIDDEN_DIM: 256
-  ATOM_EMBEDDING_SIZE: 256
-  NUM_LAYERS: 4
-  ALIGNN_LAYERS: 4
-  GCN_LAYERS: 4
+  HIDDEN_DIM: 160
+  NUM_LAYERS: 6
   NUM_RBF: 64
   DROPOUT: 0.05
   READOUT: "mean"
   ACTIVATION: "silu"
   RBF_TRAINABLE: False
   MAX_NEIGHBORS: 1000
-  ENCODING: "z"
-  BOND_FEAT_DIM: 80
-  TRIPLET_INPUT_FEATURES: 40
-  EMBEDDING_FEATURES: 64
+  ENCODING: "prop"
+  MAX_NUM_ELEMENTS: 94
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "pretrain/alignn"
+  LOG_DIR_NAME: "pretrain/alignn_old_prop"
 
 OUTPUT:
-  LOOP_RESULTS: "result/alignn_pretrain/loop_200epochs.csv"
-  PREDICTIONS: "result/alignn_pretrain/predict.csv"
+  LOOP_RESULTS: "result/alignn_old_prop_pretrain/loop.csv"
+  PREDICTIONS: "result/alignn_old_prop_pretrain/predict.csv"

@@ -6,21 +6,39 @@ from copy import deepcopy
 import torch
 
 from trainer import MaterialsTrainer
-from .alignn import ALIGNNModel
+from .alignn import ALIGNN
+
+
+def _get_or_default(cfg_section, key, default):
+    if hasattr(cfg_section, key):
+        value = getattr(cfg_section, key)
+        if value is not None:
+            return value
+    return default
 
 
 def get_config(cfg):
     """
-    Extract ALIGNN-specific configuration blocks from the global config.
-
-    Mirrors the helper layout used by the other model wrappers so training
-    entrypoints can stay uniform across architectures.
+    Build the configuration blocks needed to instantiate the DGL ALIGNN variant.
     """
     common_cfg = cfg.MODEL_COMMON
     alignn_cfg = cfg.ALIGNN
-    num_rbf = alignn_cfg.NUM_RBF if alignn_cfg.NUM_RBF is not None else common_cfg.NUM_RADIAL
-    cutoff = alignn_cfg["CUTOFF"] if "CUTOFF" in alignn_cfg else common_cfg.CUTOFF
-    out_dim = alignn_cfg["OUTPUT_DIM"] if "OUTPUT_DIM" in alignn_cfg else common_cfg.OUTPUT_DIM
+
+    num_gaussians = getattr(alignn_cfg, "NUM_GAUSSIANS", None)
+    if num_gaussians is None:
+        num_gaussians = (
+            alignn_cfg.NUM_RBF if alignn_cfg.NUM_RBF is not None else 80
+        )
+    bond_feat_dim = _get_or_default(alignn_cfg, "BOND_FEAT_DIM", num_gaussians)
+    triplet_features = _get_or_default(alignn_cfg, "TRIPLET_INPUT_FEATURES", 40)
+    embedding_features = _get_or_default(alignn_cfg, "EMBEDDING_FEATURES", 64)
+    atom_embedding_size = _get_or_default(
+        alignn_cfg, "ATOM_EMBEDDING_SIZE", alignn_cfg.HIDDEN_DIM
+    )
+    alignn_layers = _get_or_default(alignn_cfg, "ALIGNN_LAYERS", alignn_cfg.NUM_LAYERS)
+    gcn_layers = _get_or_default(alignn_cfg, "GCN_LAYERS", alignn_cfg.NUM_LAYERS)
+    link = _get_or_default(alignn_cfg, "LINK", "identity")
+    regress_forces = _get_or_default(alignn_cfg, "REGRESS_FORCES", False)
 
     return {
         "train_params": {
@@ -38,15 +56,19 @@ def get_config(cfg):
         },
         "model_params": {
             "atom_input_dim": alignn_cfg.ATOM_FEA_LEN,
-            "hidden_dim": alignn_cfg.HIDDEN_DIM,
-            "num_layers": alignn_cfg.NUM_LAYERS,
-            "num_rbf": num_rbf,
-            "cutoff": cutoff,
-            "dropout": alignn_cfg.DROPOUT,
+            "bond_feat_dim": bond_feat_dim,
+            "num_targets": common_cfg.OUTPUT_DIM,
+            "alignn_layers": alignn_layers,
+            "gcn_layers": gcn_layers,
+            "num_gaussians": num_gaussians,
+            "triplet_input_features": triplet_features,
+            "embedding_features": embedding_features,
+            "atom_embedding_size": atom_embedding_size,
+            "output_dim": common_cfg.OUTPUT_DIM,
+            "link": link,
+            "regress_forces": regress_forces,
+            "cutoff": alignn_cfg.CUTOFF,
             "readout": alignn_cfg.READOUT,
-            "out_dim": out_dim,
-            "activation": alignn_cfg.ACTIVATION,
-            "rbf_trainable": alignn_cfg.RBF_TRAINABLE,
             "max_neighbors": alignn_cfg.MAX_NEIGHBORS,
             "encoding": alignn_cfg.ENCODING,
             "max_num_elements": alignn_cfg.MAX_NUM_ELEMENTS,
@@ -56,13 +78,13 @@ def get_config(cfg):
 
 def get_alignn_model(cfg):
     """
-    Build ALIGNN wrapped in MaterialsTrainer, matching the pattern of other models.
+    Instantiate the DGL ALIGNN model wrapped in MaterialsTrainer.
     """
     config_params = get_config(cfg)
     train_params = deepcopy(config_params["train_params"])
     model_params = deepcopy(config_params["model_params"])
 
-    model = ALIGNNModel(**model_params)
+    model = ALIGNN(**model_params)
     trainer = MaterialsTrainer(model=model, **train_params)
 
     pretrained_path = getattr(cfg.MODEL, "PRETRAINED_MODEL_PATH", "")
@@ -70,14 +92,21 @@ def get_alignn_model(cfg):
         checkpoint = torch.load(pretrained_path, map_location="cpu")
         state_dict = checkpoint.get("state_dict", checkpoint)
         if any(key.startswith("model.") for key in state_dict):
-            state_dict = {key[len("model.") :]: value for key, value in state_dict.items()}
+            state_dict = {
+                key[len("model.") :]: value for key, value in state_dict.items()
+            }
 
-        missing, unexpected = trainer.model.load_state_dict(state_dict, strict=False)
+        missing, unexpected = trainer.model.load_state_dict(
+            state_dict, strict=False
+        )
         if missing:
             print(f"Missing keys when loading ALIGNN checkpoint: {missing}")
         if unexpected:
             print(f"Unexpected keys when loading ALIGNN checkpoint: {unexpected}")
-        print(f"Loaded ALIGNN checkpoint from {pretrained_path} (epoch {checkpoint.get('epoch', 'unknown')})")
+        print(
+            f"Loaded ALIGNN checkpoint from {pretrained_path} "
+            f"(epoch {checkpoint.get('epoch', 'unknown')})"
+        )
     else:
         print(f"=> no checkpoint found at '{cfg.MODEL.PRETRAINED_MODEL_PATH}'")
 

@@ -28,6 +28,7 @@ from loaddata.collate import collate_pool_leftnet
 from models.leftnet.model_leftnet import get_leftnet_model
 from models.cartnet.model_cartnet import get_cartnet_model
 from models.alignn.model_alignn import get_alignn_model
+from models.alignn_old.model_alignn import get_alignn_old_model
 from models.CHGnet.model_chgnet import get_chgnet_model
 from trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
@@ -147,6 +148,8 @@ def get_model(cfg):
         return get_cartnet_model(cfg)
     elif cfg.MODEL.NAME == "alignn":
         return get_alignn_model(cfg)
+    elif cfg.MODEL.NAME == "alignn_old":
+        return get_alignn_old_model(cfg)
     else:
         raise ValueError(f"Unknown model name: {cfg.MODEL.NAME}")
 
