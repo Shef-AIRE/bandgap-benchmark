@@ -9,7 +9,7 @@ MODEL:
   CIF_FOLDER: "cif_file"
 
 SOLVER:
-  LR: 0.01
+  LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 200
   NUM_RUNS: 1
