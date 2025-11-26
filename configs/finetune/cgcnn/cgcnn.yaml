@@ -21,9 +21,6 @@ SOLVER:
   NUM_RUNS: 1
 
 
-CGCNN:
-  FEATURE_FUSION: 'leftnet'
-  LAYER_FREEZE: 'none'
 
 LOGGING:
   LOG_DIR: "saved_models"
