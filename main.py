@@ -449,6 +449,9 @@ def main():
                 best_params = results.get("best_params")
                 if best_params:
                     print(f"{fold_label} best params: {best_params}")
+                    best_params_path = results.get("best_params_path")
+                    if best_params_path:
+                        print(f"Saved {cfg.MODEL.NAME} best params to {best_params_path}")
 
                 val_metrics = results["val_metrics"]
                 print(

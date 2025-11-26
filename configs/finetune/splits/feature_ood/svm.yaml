@@ -1,17 +1,31 @@
 DATASET:
-  TRAIN: "data/splits_feature_ood/train_data.json"
-  VAL: "data/splits_feature_ood/test_data.json"
-
+  TRAIN: data/splits_feature_ood/train_data.json
+  VAL: data/splits_feature_ood/test_data.json
 MODEL:
-  NAME: "svm"
-  PRETRAINED_MODEL_PATH: ""
-  INIT_FILE: "cif_file/atom_init.json"
-  CIF_FOLDER: "cif_file"
-
+  NAME: svm
+  PRETRAINED_MODEL_PATH: ''
+  INIT_FILE: cif_file/atom_init.json
+  CIF_FOLDER: cif_file
+  HYPERPARAMS:
+    SEARCH: grid
+    C:
+    - 1
+    - 10
+    - 100
+    gamma:
+    - 0.01
+    - 0.1
+    - 1
+    epsilon:
+    - 0.01
+    - 0.1
+    - 0.5
+    kernel:
+    - rbf
 SOLVER:
   NUM_FOLDS: 10
   NUM_RUNS: 1
-
+  EPOCHS: 100
 LOGGING:
-  LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "feature_ood/svm"
+  LOG_DIR: saved_models
+  LOG_DIR_NAME: feature_ood/svm

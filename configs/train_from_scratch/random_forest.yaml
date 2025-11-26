@@ -7,6 +7,12 @@ MODEL:
   PRETRAINED_MODEL_PATH: ' '  # NOT EXIST
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
+  HYPERPARAMS:
+    SEARCH: grid
+    n_estimators: [200, 400, 800]
+    max_depth: [null, 10, 20]
+    min_samples_split: [2, 4, 8]
+    min_samples_leaf: [1, 2, 4]
 
 
 LOGGING:

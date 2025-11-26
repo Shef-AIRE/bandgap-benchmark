@@ -9,6 +9,10 @@ MODEL:
   PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
+  HYPERPARAMS:
+    SEARCH: grid
+    fit_intercept: [True, False]
+    positive: [True, False]
 
 SOLVER:
   NUM_FOLDS: 10

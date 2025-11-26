@@ -1,7 +1,9 @@
+import json
 import os
 from typing import Any, Dict, Optional
 
 import numpy as np
+import yaml
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LinearRegression
@@ -38,7 +40,10 @@ def _parse_hyperparams(cfg) -> Dict[str, Any]:
         return {}
     if not keys:
         return {}
-    hyper_dict = hyper_cfg.to_dict()
+    try:
+        hyper_dict = yaml.safe_load(hyper_cfg.dump())
+    except AttributeError:
+        hyper_dict = dict(hyper_cfg)
     return hyper_dict
 
 
@@ -106,6 +111,14 @@ def run_traditional_model(cfg, train_dataset, val_dataset, fold_label: str, test
         for idx, imp in enumerate(importances_mean):
             f.write(f"Feature {idx:2d}: {imp}\n")
 
+    best_params_file = None
+    if best_params:
+        best_params_file = os.path.join(
+            cfg.LOGGING.LOG_DIR, f"best_params_{safe_label}.json"
+        )
+        with open(best_params_file, "w") as f:
+            json.dump(best_params, f, indent=2)
+
     val_predictions = model.predict(X_val)
     val_mae = mean_absolute_error(y_val, val_predictions)
     val_mse = mean_squared_error(y_val, val_predictions)
@@ -129,10 +142,25 @@ def run_traditional_model(cfg, train_dataset, val_dataset, fold_label: str, test
 
     val_metrics = {"mae": val_mae, "mse": val_mse, "mre": val_mre, "r2": val_r2}
 
+    # print results and best params
+    print(f"Results for fold {fold_label}:")
+    print(f"  Validation MAE: {val_mae:.6f}")
+    print(f"  Validation MSE: {val_mse:.6f}")
+    print(f"  Validation MRE: {val_mre:.6f}")
+    print(f"  Validation R2:  {val_r2:.6f}")
+    if test_metrics:
+        print(f"  Test MAE: {test_metrics['mae']:.6f}")
+        print(f"  Test MSE: {test_metrics['mse']:.6f}")
+        print(f"  Test MRE: {test_metrics['mre']:.6f}")
+        print(f"  Test R2:  {test_metrics['r2']:.6f}")
+    if best_params:
+        print(f"  Best Hyperparameters: {best_params}")
+
     return {
         "model": model,
         "best_params": best_params,
         "val_metrics": val_metrics,
         "test_metrics": test_metrics,
         "feature_importances_path": feature_importances_file,
+        "best_params_path": best_params_file,
     }
