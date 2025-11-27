@@ -347,7 +347,8 @@ class ALIGNN(nn.Module):
         if self.link:
             out = self.link(out)
 
-        return torch.squeeze(out)
+        # keep explicit target dimension so downstream losses stay well-defined
+        return out.view(-1, self.num_targets)
 
     def build_dgl_graphs(self, batch):
         structures = getattr(batch, "structures", None)
