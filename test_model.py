@@ -9,13 +9,15 @@ from torch.utils.data import DataLoader
 import random
 
 from loaddata.dataloader import get_train_val_test_loader
-from pipeline.cgcnn.model_cgcnn import get_cgcnn_model  # Ensure the correct module and function path
+from models.cgcnn.model_cgcnn import get_cgcnn_model
 from loaddata.cifdata import CIFData
 from loaddata.collate import collate_pool_leftnet
-from pipeline.leftnet.model_leftnet import get_leftnet_model
+from models.leftnet.model_leftnet import get_leftnet_model
+from models.CHGnet.model_chgnet import get_chgnet_model
 from config import get_cfg_defaults
 # from tests.shap_utils import compute_shap_values  # Import the SHAP utility function
-from pipeline.cartnet.model_cartnet import get_cartnet_model  # Import the missing function
+from models.cartnet.model_cartnet import get_cartnet_model  # Import the missing function
+from models.alignn.model_alignn import get_alignn_model
 
 
 
@@ -89,6 +91,10 @@ def load_model_and_data(cfg, checkpoint_path, test_data_path, cif_folder):
         model = get_leftnet_model(cfg)
     elif cfg.MODEL.NAME == "cartnet":
         model = get_cartnet_model(cfg)
+    elif cfg.MODEL.NAME == "chgnet":
+        model = get_chgnet_model(cfg)
+    elif cfg.MODEL.NAME == "alignn":
+        model = get_alignn_model(cfg)
     else:
         raise ValueError(f"Unknown model name: {cfg.MODEL.NAME}")
 
@@ -133,10 +139,15 @@ def main():
     all_predictions = []
     with torch.no_grad():
         for batch in test_loader:
-            preds, *_ = model(batch)  # grab only the first value
-            preds = preds.cpu().numpy()
+            output = model(batch)
+            if isinstance(output, (tuple, list)):
+                output = output[0]
+            preds = output.detach().cpu().view(-1)
+            all_predictions.extend(preds.tolist())
 
-            all_predictions.extend(preds.flatten())
+    if len(all_predictions) != len(test_data):
+        print(f"Warning: predictions count ({len(all_predictions)}) != test rows ({len(test_data)}).")
+
     test_data["prediction"] = all_predictions
     output_file_path = os.path.join(args.output_dir, args.output_file)
     test_data.to_csv(output_file_path, index=False)
