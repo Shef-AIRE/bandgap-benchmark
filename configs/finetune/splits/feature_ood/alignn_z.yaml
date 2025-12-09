@@ -3,7 +3,7 @@ DATASET:
   VAL: data/splits_feature_ood/test_data.json
 MODEL:
   NAME: alignn
-  PRETRAINED_MODEL_PATH: saved_models/alignn/best.ckpt
+  PRETRAINED_MODEL_PATH: saved_models/pretrain/alignn/best.ckpt
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
 SOLVER:

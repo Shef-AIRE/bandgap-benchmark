@@ -5,7 +5,7 @@ DATASET:
   SPLIT_GLOB: data/split_by_category/*.train.json
 MODEL:
   NAME: alignn
-  PRETRAINED_MODEL_PATH: saved_models/alignn_prop/best-mre-epoch=194-val_mre=0.2759.ckpt
+  PRETRAINED_MODEL_PATH: saved_models/pretrain/alignn_prop/best.ckpt
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
 SOLVER:
