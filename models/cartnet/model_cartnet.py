@@ -4,6 +4,7 @@ from copy import deepcopy
 import torch
 
 from models.cartnet.CartNet import CartNet
+from models.cartnet.CartNet_prop import CartNet_prop
 from trainer import MaterialsTrainer
 
 
@@ -53,17 +54,28 @@ def get_cartnet_model(cfg):
     train_params_local = deepcopy(train_params)
     model_params = config_params["model_params"]
     model_params_local = deepcopy(model_params)
-
-    model = CartNet(dim_in=model_params_local["dim_in"],
-                        dim_rbf=model_params_local["dim_rbf"], 
-                        num_layers=model_params_local["num_layers"], 
-                        radius=model_params_local["radius"],
-                        invariant=model_params_local["invariant"], 
-                        temperature=model_params_local["temperature"], 
-                        use_envelope=model_params_local["use_envelope"],
-                        atom_types=model_params_local["atom_types"],
-                        cholesky=False
-                    )
+    if cfg.CARTNET.ENCODING == "z":
+        model = CartNet(dim_in=model_params_local["dim_in"],
+                            dim_rbf=model_params_local["dim_rbf"], 
+                            num_layers=model_params_local["num_layers"], 
+                            radius=model_params_local["radius"],
+                            invariant=model_params_local["invariant"], 
+                            temperature=model_params_local["temperature"], 
+                            use_envelope=model_params_local["use_envelope"],
+                            atom_types=model_params_local["atom_types"],
+                            cholesky=False
+                        )
+    elif cfg.CARTNET.ENCODING == "prop":
+        model = CartNet_prop(dim_in=model_params_local["dim_in"],
+                            dim_rbf=model_params_local["dim_rbf"], 
+                            num_layers=model_params_local["num_layers"], 
+                            radius=model_params_local["radius"],
+                            invariant=model_params_local["invariant"], 
+                            temperature=model_params_local["temperature"], 
+                            use_envelope=model_params_local["use_envelope"],
+                            atom_types=model_params_local["atom_types"],
+                            cholesky=True
+                        )
     
     trainer = MaterialsTrainer(model=model, **train_params_local)
 

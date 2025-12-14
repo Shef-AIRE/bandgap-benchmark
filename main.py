@@ -211,14 +211,6 @@ def setup_trainer(cfg, args, wandb_logger, log_dir, fold_label="fold"):
         filename=f"{safe_label}-last-{{epoch:02d}}",
     )
 
-    # Save a checkpoint every 20 epochs
-    periodic_checkpoint = ModelCheckpoint(
-        dirpath=log_dir,
-        every_n_epochs=20,
-        save_top_k=-1,
-        filename=f"{safe_label}-epoch-{{epoch:02d}}",
-    )
-
     metrics_callback = MetricsCallback()
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
@@ -240,7 +232,6 @@ def setup_trainer(cfg, args, wandb_logger, log_dir, fold_label="fold"):
             best_mre_checkpoint,
             best_mae_checkpoint,
             last_checkpoint,
-            periodic_checkpoint,
             lr_monitor,
             metrics_callback,
         ],

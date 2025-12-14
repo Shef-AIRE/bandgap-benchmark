@@ -132,6 +132,7 @@ _C.CARTNET.INVARIANT = False  # Add appropriate default value
 _C.CARTNET.TEMPERATURE = False  # Add appropriate default value
 _C.CARTNET.USE_ENVELOPE = True  # Add appropriate default value
 _C.CARTNET.ATOM_TYPES = True  # Add appropriate default value
+_C.CARTNET.ENCODING = "z"  # Choices: ['z', 'prop']
 
 
 # -----------------------------------------------------------------------------
