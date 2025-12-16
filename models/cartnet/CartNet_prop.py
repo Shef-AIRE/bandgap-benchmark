@@ -112,32 +112,22 @@ class Encoder(torch.nn.Module):
         self.radius = radius
         self.invariant = invariant
         self.temperature = temperature
-        self.atom_types = atom_types
-        if self.atom_types:
-            self.embedding = nn.Embedding(92, self.dim_in*2)
-            torch.nn.init.xavier_uniform_(self.embedding.weight.data)
-        elif not self.temperature:
-            self.embedding = nn.Embedding(1, self.dim_in)
+        self.atom_types = atom_types  # kept for API consistency; prop path ignores embedding
 
-        if self.temperature:
-            self.temperature_proj_atom = pyg_nn.Linear(1, self.dim_in*2, bias=True)
-        elif self.atom_types:
-            self.bias = nn.Parameter(torch.zeros(self.dim_in*2))
-        self.activation = nn.SiLU(inplace=True)
-        
-        if self.temperature or self.atom_types:
-            self.encoder_atom = nn.Sequential(self.activation,
-                                        pyg_nn.Linear(self.dim_in*2, self.dim_in),
-                                        self.activation)
+        # For prop features, project atom_fea to model dimension (linear only)
+        self.atom_feat_proj = nn.LazyLinear(self.dim_in)
+
         if self.invariant:
             dim_edge = dim_rbf
         else:
             dim_edge = dim_rbf + 3
         
-        self.encoder_edge = nn.Sequential(pyg_nn.Linear(dim_edge, self.dim_in*2),
-                                        self.activation,
-                                        pyg_nn.Linear(self.dim_in*2, self.dim_in),
-                                        self.activation)
+        self.encoder_edge = nn.Sequential(
+            pyg_nn.Linear(dim_edge, self.dim_in * 2),
+            nn.SiLU(inplace=True),
+            pyg_nn.Linear(self.dim_in * 2, self.dim_in),
+            nn.SiLU(inplace=True),
+        )
 
         self.rbf = ExpNormalSmearing(0.0,radius,dim_rbf,False)  
         
@@ -146,10 +136,10 @@ class Encoder(torch.nn.Module):
     def forward(self, batch):
 
         batch.device = next(self.parameters()).device
+        # Use atomic numbers for embedding when atom_types is enabled; otherwise use provided features.
         data = batch.atom_fea.to(batch.device)
         batch_idx = batch.batch_idx.to(batch.device)
         pos = batch.positions.to(batch.device)
-
         batch.edge_index = radius_graph(pos, r=self.radius, batch=batch_idx, max_num_neighbors=1000)
         j, i = batch.edge_index
         vec = pos[j] - pos[i]
@@ -158,17 +148,8 @@ class Encoder(torch.nn.Module):
         batch.cart_dir = vec/dist.unsqueeze(-1)
 
 
-        if self.temperature and self.atom_types:
-            x = self.embedding(data) + self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
-        elif not self.temperature and self.atom_types:  # atom_types default value is True
-            x = self.embedding(data) + self.bias
-        # elif self.temperature and not self.atom_types:
-        #     x = self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
-        # else:
-        #     batch.x = self.embedding.weight.repeat(batch.x.shape[0],1)
-        
-        if self.temperature or self.atom_types:
-            batch.x = self.encoder_atom(x)
+        # Project raw atom features through a learnable linear projection to dim_in
+        batch.x = self.atom_feat_proj(data)
 
         if self.invariant: # cfg.invariant is False
             batch.edge_attr = self.encoder_edge(self.rbf(batch.cart_dist))
@@ -309,7 +290,9 @@ class Cholesky_head(torch.nn.Module):
                                 pyg_nn.Linear(dim_in//2, 6))
 
     def forward(self, batch):
-        pred = self.MLP(batch.x[batch.non_H_mask])
+        mask = getattr(batch, "non_H_mask", None)
+        x_in = batch.x[mask] if mask is not None else batch.x
+        pred = self.MLP(x_in)
 
         diag_elements = F.softplus(pred[:, :3])
 
@@ -343,4 +326,3 @@ class Scalar_head(torch.nn.Module):
         batch.x = self.MLP(batch.x)
         batch.x = scatter(batch.x, batch.batch_idx.to(batch.device), dim=0, reduce="mean", dim_size=dim_size)
         return batch.x, batch.target
-

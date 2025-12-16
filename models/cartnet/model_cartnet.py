@@ -74,7 +74,7 @@ def get_cartnet_model(cfg):
                             temperature=model_params_local["temperature"], 
                             use_envelope=model_params_local["use_envelope"],
                             atom_types=model_params_local["atom_types"],
-                            cholesky=True
+                            cholesky=False
                         )
     
     trainer = MaterialsTrainer(model=model, **train_params_local)
