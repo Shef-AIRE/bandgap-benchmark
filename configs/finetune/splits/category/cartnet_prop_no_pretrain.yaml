@@ -1,0 +1,41 @@
+SOLVER:
+  SEED: 42
+  EPOCHS: 100
+  LR: 0.001
+  BATCH_SIZE: 64
+  NUM_RUNS: 1
+  NUM_FOLDS: 10
+  RANDOMIZE: true
+  TASK: regression
+  DISABLE_CUDA: false
+  WORKERS: 4
+  START_EPOCH: 0
+  MOMENTUM: 0.9
+  WEIGHT_DECAY: 0.0
+  PRINT_FREQ: 10
+  RESUME: ''
+  OPTIM: SGD
+MODEL:
+  NAME: cartnet
+  PRETRAINED_MODEL_PATH: ''
+  INIT_FILE: cif_file/atom_init.json
+  CIF_FOLDER: cif_file
+  MAX_NBRS: 12
+  RADIUS: 8.0
+CARTNET:
+  DIM_IN: 256
+  DIM_RBF: 64
+  NUM_LAYERS: 4
+  INVARIANT: true
+  USE_ENVELOPE: true
+  ATOM_TYPES: true
+  ENCODING: prop
+LOGGING:
+  LOG_DIR: saved_models
+  LOG_DIR_NAME: split_by_category/cartnet_prop_no_pretrain
+DATASET:
+  TRAIN: ''
+  VAL: ''
+  PREDEFINED_SPLIT: true
+  SPLIT_GLOB: data/split_by_category/*.train.json
+
