@@ -40,4 +40,4 @@ LOGGING:
 
 DATASET:
   TRAIN: "data/pretrain_data.json"
-  VAL: 'data/filtered_data/test_data.json'
+  VAL: 'data/fine_tune/test_data.json'
