@@ -18,7 +18,7 @@ SOLVER:
 
 MODEL:
   NAME: "cartnet"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'logistic', 'random_forest']
-  PRETRAINED_MODEL_PATH: ""
+  PRETRAINED_MODEL_PATH: "saved_models/cartnet/pretrain-last-epoch=154.ckpt"
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
   MAX_NBRS: 12
