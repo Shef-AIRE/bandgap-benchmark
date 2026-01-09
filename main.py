@@ -108,10 +108,7 @@ def prepare_datasets(cfg, train_fold, val_fold):
     val_dataset = CIFData(val_fold[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                           cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
 
-    if cfg.MODEL.NAME == "chgnet":
-        collate_fn = collate_pool_leftnet
-    else:
-        collate_fn = collate_pool_leftnet
+    collate_fn = collate_pool_leftnet
 
     train_loader = DataLoader(
         train_dataset,
