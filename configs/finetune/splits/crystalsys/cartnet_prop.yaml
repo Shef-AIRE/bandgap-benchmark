@@ -42,4 +42,3 @@ CARTNET:
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: crystalsys/cartnet_prop
-
