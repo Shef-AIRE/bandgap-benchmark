@@ -2,7 +2,7 @@ DATASET:
   TRAIN: ''
   VAL: ''
   PREDEFINED_SPLIT: true
-  SPLIT_GLOB: datas/split_by_category/*.train.json
+  SPLIT_GLOB: data/split_by_category/*.train.json
 MODEL:
   NAME: chgnet
   PRETRAINED_MODEL_PATH: 'saved_models/chgnet_cutoff5/best.ckpt'
