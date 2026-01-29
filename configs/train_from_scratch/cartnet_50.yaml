@@ -1,0 +1,41 @@
+SOLVER:
+  SEED: 42
+  EPOCHS: 100
+  LR: 0.001
+  BATCH_SIZE: 32
+  NUM_RUNS: 1
+  NUM_FOLDS: 10
+  RANDOMIZE: True
+  TASK: "regression"
+  DISABLE_CUDA: False
+  WORKERS: 4
+  START_EPOCH: 0
+  LR_MILESTONES: [50, 75]
+  WEIGHT_DECAY: 0.0
+  PRINT_FREQ: 10
+  RESUME: ""
+  OPTIM: "SGD"
+
+MODEL:
+  NAME: "cartnet"
+  PRETRAINED_MODEL_PATH: ""
+  INIT_FILE: 'cif_file/atom_init.json'
+  CIF_FOLDER: "cif_file"
+  MAX_NBRS: 12
+  RADIUS: 8.0
+
+CARTNET:
+  DIM_IN: 256
+  DIM_RBF: 64
+  NUM_LAYERS: 4
+  INVARIANT: True
+  USE_ENVELOPE: True
+  ATOM_TYPES: True
+
+LOGGING:
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "train_from_scratch/cartnet_50"
+
+DATASET:
+  TRAIN: 'data/fine_tune/train_data_50.json'
+  VAL: 'data/fine_tune/test_data.json'

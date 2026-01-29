@@ -64,15 +64,26 @@ class CartNet(torch.nn.Module):
         else:
             self.head = Scalar_head(dim_in)
         
-    def forward(self, batch):
+    def forward(self, batch, return_features: bool = False):
         batch = self.encoder(batch)
+        feats = None
+        if return_features:
+            batch.x = batch.x.requires_grad_()
+            batch.edge_attr = batch.edge_attr.requires_grad_()
+            feats = {
+                "node_repr": batch.x,
+                "edge_repr": batch.edge_attr,
+                "edge_index": batch.edge_index,
+            }
 
         for layer in self.layers:
             batch = layer(batch)
         
         pred, true = self.head(batch)
-        
-        return pred,true
+
+        if return_features:
+            return pred, feats
+        return pred, true
 
 class Encoder(torch.nn.Module):
     """
@@ -343,4 +354,3 @@ class Scalar_head(torch.nn.Module):
         batch.x = self.MLP(batch.x)
         batch.x = scatter(batch.x, batch.batch_idx.to(batch.device), dim=0, reduce="mean", dim_size=dim_size)
         return batch.x, batch.target
-

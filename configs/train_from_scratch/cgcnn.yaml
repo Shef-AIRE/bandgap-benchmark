@@ -18,4 +18,4 @@ CGCNN:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "cgcnn"
+  LOG_DIR_NAME: "train_from_scratch/cgcnn"

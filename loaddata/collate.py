@@ -13,6 +13,7 @@ def collate_pool_leftnet(dataset_list):
     crystal_atom_idx, batch_target = [], []
     batch_cif_ids = []
     batch_atom_indices = []
+    batch_structures = []
     base_idx = 0
 
     for i, data_item in enumerate(dataset_list):
@@ -30,6 +31,7 @@ def collate_pool_leftnet(dataset_list):
         batch_target.append(data_item.target)
         batch_cif_ids.append(data_item.cif_id)
         batch_atom_indices.append(torch.full((n_i,), i, dtype=torch.long))
+        batch_structures.append(data_item.structure)
 
         # Update base index for the next crystal
         base_idx += n_i
@@ -44,12 +46,25 @@ def collate_pool_leftnet(dataset_list):
         crystal_atom_idx=crystal_atom_idx,  # List of tensors for crystal-to-atom mapping
         target=torch.stack(batch_target, dim=0),  # Stack targets (assuming they are uniform in shape)
         cif_ids=batch_cif_ids,  # List of cif_ids
-        batch_idx=torch.cat(batch_atom_indices, dim=0)  # Concatenate batch indices
+        batch_idx=torch.cat(batch_atom_indices, dim=0),  # Concatenate batch indices
+        structures=batch_structures,
     )
 
 
 class BatchData:
-    def __init__(self, atom_fea, nbr_fea, nbr_fea_idx, positions, atom_num, crystal_atom_idx, target, cif_ids, batch_idx):
+    def __init__(
+        self,
+        atom_fea,
+        nbr_fea,
+        nbr_fea_idx,
+        positions,
+        atom_num,
+        crystal_atom_idx,
+        target,
+        cif_ids,
+        batch_idx,
+        structures=None,
+    ):
         self.atom_fea = atom_fea
         self.nbr_fea = nbr_fea
         self.nbr_fea_idx = nbr_fea_idx
@@ -60,6 +75,7 @@ class BatchData:
         self.cif_ids = cif_ids
         self.batch_idx = batch_idx
         self.batch_size = len(cif_ids)
+        self.structures = structures
 
 
 def collate_chgnet(dataset_list):

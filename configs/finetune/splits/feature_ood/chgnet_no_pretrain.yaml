@@ -1,0 +1,17 @@
+DATASET:
+  TRAIN: data/splits_feature_ood/train_data.json
+  VAL: data/splits_feature_ood/test_data.json
+MODEL:
+  NAME: chgnet
+  PRETRAINED_MODEL_PATH: ''
+  INIT_FILE: cif_file/atom_init.json
+  CIF_FOLDER: cif_file
+SOLVER:
+  LR: 0.001
+  NUM_FOLDS: 10
+  EPOCHS: 100
+  NUM_RUNS: 1
+  BATCH_SIZE: 32
+LOGGING:
+  LOG_DIR: saved_models
+  LOG_DIR_NAME: feature_ood/chgnet_no_pretrain

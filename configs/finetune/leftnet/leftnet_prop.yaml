@@ -11,7 +11,7 @@ MODEL:
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
-  EPOCHS: 50
+  EPOCHS: 100
   NUM_RUNS: 1
 
 LEFTNET:
@@ -21,4 +21,3 @@ LEFTNET:
 LOGGING:
   LOG_DIR: "saved_models"
   LOG_DIR_NAME: "leftnet_prop"  
-

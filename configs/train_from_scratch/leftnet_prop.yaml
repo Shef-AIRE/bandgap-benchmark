@@ -3,22 +3,21 @@ DATASET:
  VAL: 'data/fine_tune/test_data.json'
 
 MODEL:
-  NAME: "leftnet"
-  PRETRAINED_MODEL_PATH: " " # NOT EXIST
+  NAME: 'leftnet'
+  PRETRAINED_MODEL_PATH: ' '
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
 
+
 SOLVER:
-  LR: 0.01
-  TRAIN_RATIO: 0.75
-  VAL_RATIO: 0.15
-  TEST_RATIO: 0.05
-  EPOCHS: 200
-  NUM_RUNS: 50
+  LR: 0.001
+  NUM_FOLDS: 10
+  EPOCHS: 100
 
 LEFTNET:
-  ENCODING: 'one-hot'
+  ENCODING: 'prop'
+  LAYER_FREEZE: 'none'
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "/leftnet_prop"
+  LOG_DIR_NAME: "train_from_scratch/leftnet_prop"

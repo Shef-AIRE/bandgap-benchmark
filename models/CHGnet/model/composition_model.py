@@ -8,80 +8,10 @@ import torch
 from pymatgen.core import Structure
 from torch import Tensor, nn
 
-from .functions import GatedMLP, find_activation
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from pathlib import Path
 
     from ..graph.crystalgraph import CrystalGraph
-
-
-class CompositionModel(nn.Module):
-    """A simple FC model that takes in a chemical composition (no structure info)
-    and outputs energy.
-    """
-
-    def __init__(
-        self,
-        *,
-        atom_fea_dim: int = 64,
-        activation: str = "silu",
-        is_intensive: bool = True,
-        max_num_elements: int = 94,
-    ) -> None:
-        """Initialize a CompositionModel."""
-        super().__init__()
-        self.is_intensive = is_intensive
-        self.max_num_elements = max_num_elements
-        self.fc1 = nn.Linear(max_num_elements, atom_fea_dim)
-        self.activation = find_activation(activation)
-        self.gated_mlp = GatedMLP(
-            input_dim=atom_fea_dim,
-            output_dim=atom_fea_dim,
-            hidden_dim=atom_fea_dim,
-            activation=activation,
-        )
-        self.fc2 = nn.Linear(atom_fea_dim, 1)
-
-    def _get_energy(self, composition_feas: Tensor) -> Tensor:
-        """Predict the energy given composition encoding.
-
-        Args:
-            composition_feas: batched atom feature matrix of shape
-                [batch_size, total_num_elements].
-
-        Returns:
-            prediction associated with each composition [batchsize].
-        """
-        composition_feas = self.activation(self.fc1(composition_feas))
-        composition_feas += self.gated_mlp(composition_feas)
-        return self.fc2(composition_feas).view(-1)
-
-    def forward(self, graphs: list[CrystalGraph]) -> Tensor:
-        """Get the energy of a list of CrystalGraphs as Tensor."""
-        composition_feas = self._assemble_graphs(graphs)
-        return self._get_energy(composition_feas)
-
-    def _assemble_graphs(self, graphs: list[CrystalGraph]) -> Tensor:
-        """Assemble a list of graphs into one-hot composition encodings.
-
-        Args:
-            graphs (list[CrystalGraph]): a list of CrystalGraphs
-
-        Returns:
-            assembled batch_graph that contains all information for model.
-        """
-        composition_feas = []
-        for graph in graphs:
-            composition_fea = torch.bincount(
-                graph.atomic_number - 1, minlength=self.max_num_elements
-            )
-            if self.is_intensive:
-                n_atom = graph.atomic_number.shape[0]
-                composition_fea = composition_fea / n_atom
-            composition_feas.append(composition_fea)
-        return torch.stack(composition_feas, dim=0)
 
 
 class AtomRef(nn.Module):

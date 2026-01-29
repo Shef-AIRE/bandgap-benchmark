@@ -12,6 +12,8 @@ _C.DATASET = CN()
 _C.DATASET.TRAIN = "data/ds1.json"
 _C.DATASET.VAL = "data/ds3.json"
 _C.DATASET.RATIO = 1.0 # Ratio of the dataset to use
+_C.DATASET.PREDEFINED_SPLIT = False
+_C.DATASET.SPLIT_GLOB = ""
 
 
 # -----------------------------------------------------------------------------
@@ -42,13 +44,22 @@ _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 # Model paths and parameters
 # -----------------------------------------------------------------------------
 _C.MODEL = CN()
-_C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
+_C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'alignn', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
 _C.MODEL.PRETRAINED_MODEL_PATH = ""
 _C.MODEL.CIF_FOLDER = "./cifs"
 _C.MODEL.INIT_FILE = "./init.json"
 _C.MODEL.MAX_NBRS = 12
 _C.MODEL.RADIUS = 7.0
+_C.MODEL.HYPERPARAMS = CN(new_allowed=True)
 
+
+# -----------------------------------------------------------------------------
+# Common model hyperparameters
+# -----------------------------------------------------------------------------
+_C.MODEL_COMMON = CN()
+_C.MODEL_COMMON.CUTOFF = 6.0
+_C.MODEL_COMMON.NUM_RADIAL = 32
+_C.MODEL_COMMON.OUTPUT_DIM = 1
 
 
 # -----------------------------------------------------------------------------
@@ -74,17 +85,41 @@ _C.CGCNN.POS_FEA_LEN = 3
 # LeftNet configs
 # -----------------------------------------------------------------------------
 _C.LEFTNET = CN()
-_C.LEFTNET.CUTOFF = 6.0
 _C.LEFTNET.HIDDEN_CHANNELS = 128
 _C.LEFTNET.NUM_LAYERS = 4
 
-_C.LEFTNET.NUM_RADIAL = 32
 _C.LEFTNET.REGRESS_FORCES = False
 _C.LEFTNET.USE_PBC = True
 _C.LEFTNET.OTF_GRAPH = False
-_C.LEFTNET.OUTPUT_DIM = 1
 _C.LEFTNET.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
 _C.LEFTNET.ENCODING = "none" # Choices: ['one-hot', 'none'], none for LEFTNet-Z, one-hot for LEFTNet-Prop
+
+# -----------------------------------------------------------------------------
+# ALIGNN specific parameters
+# -----------------------------------------------------------------------------
+_C.ALIGNN = CN()
+_C.ALIGNN.ATOM_FEA_LEN = 92
+_C.ALIGNN.HIDDEN_DIM = 128
+_C.ALIGNN.NUM_LAYERS = 4
+_C.ALIGNN.ALIGNN_LAYERS = 4
+_C.ALIGNN.GCN_LAYERS = 4
+_C.ALIGNN.NUM_RBF = None
+_C.ALIGNN.NUM_GAUSSIANS = 80
+_C.ALIGNN.BOND_FEAT_DIM = 80
+_C.ALIGNN.TRIPLET_INPUT_FEATURES = 40
+_C.ALIGNN.EMBEDDING_FEATURES = 64
+_C.ALIGNN.ATOM_EMBEDDING_SIZE = 256
+_C.ALIGNN.CUTOFF = 5.0
+_C.ALIGNN.DROPOUT = 0.0
+_C.ALIGNN.READOUT = "mean"  # Choices: ['mean', 'sum', 'max']
+_C.ALIGNN.MAX_NEIGHBORS = 1000
+_C.ALIGNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
+_C.ALIGNN.ACTIVATION = "silu"
+_C.ALIGNN.RBF_TRAINABLE = False
+_C.ALIGNN.ENCODING = "prop"  # Choices: ['prop', 'z']
+_C.ALIGNN.MAX_NUM_ELEMENTS = 94
+_C.ALIGNN.LINK = "identity"
+_C.ALIGNN.REGRESS_FORCES = False
 
 # -----------------------------------------------------------------------------
 # CARTNET specific parameters
@@ -97,6 +132,7 @@ _C.CARTNET.INVARIANT = False  # Add appropriate default value
 _C.CARTNET.TEMPERATURE = False  # Add appropriate default value
 _C.CARTNET.USE_ENVELOPE = True  # Add appropriate default value
 _C.CARTNET.ATOM_TYPES = True  # Add appropriate default value
+_C.CARTNET.ENCODING = "z"  # Choices: ['z', 'prop']
 
 
 # -----------------------------------------------------------------------------
@@ -126,6 +162,9 @@ _C.CHGNET.CUTOFF_COEFF = 8
 _C.CHGNET.LEARNABLE_RBF = True
 _C.CHGNET.GMLP_NORM = "layer"
 _C.CHGNET.READOUT_NORM = "layer"
+_C.CHGNET.ENCODING = "z"  # Choices: ['z', 'prop']
+_C.CHGNET.ATOM_INPUT_DIM = 92
+_C.CHGNET.MAX_NUM_ELEMENTS = 94
 
 
 # -----------------------------------------------------------------------------

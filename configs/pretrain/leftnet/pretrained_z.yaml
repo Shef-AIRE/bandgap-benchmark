@@ -5,15 +5,12 @@ DATASET:
 MODEL:
   NAME: "leftnet"
   PRETRAINED_MODEL_PATH: " " # NOT EXIST
-  INIT_FILE: "master_files/encoding/atom_init.json"
+  INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 
 SOLVER:
   LR: 0.01
-  TRAIN_RATIO: 0.85
-  VAL_RATIO: 0.1
-  TEST_RATIO: 0.05
   EPOCHS: 200
   NUM_RUNS: 1
 

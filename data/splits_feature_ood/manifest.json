@@ -1,0 +1,27 @@
+{
+  "embedding": "t-SNE",
+  "algo": "KMeans",
+  "label_ood": 7,
+  "sizes": {
+    "ood": 189,
+    "id": 1516
+  },
+  "constraints": {
+    "min_ood": 50,
+    "max_ood": 300
+  },
+  "hdbscan": {
+    "used": false,
+    "min_cluster_size": 35,
+    "min_samples": 8
+  },
+  "kmeans": {
+    "range": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ]
+  }
+}

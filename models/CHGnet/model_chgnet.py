@@ -24,11 +24,16 @@ class CHGNetLightningWrapper(nn.Module):
         super().__init__()
         self.chgnet = chgnet
 
-    def forward(self, batch):
-        prediction = self.chgnet(batch)
-        energy = prediction["e"]
+    def forward(self, batch, return_features: bool = False):
+        prediction = self.chgnet(batch, return_features=return_features)
+        if return_features:
+            energy = prediction["e"]
+        else:
+            energy = prediction["e"]
         if energy.dim() == 1:
             energy = energy.unsqueeze(-1)
+        if return_features:
+            return energy, prediction.get("features", {})
         return energy
 
 
@@ -70,6 +75,9 @@ def get_config(cfg) -> Dict[str, Any]:
         "learnable_rbf": cfg.CHGNET.LEARNABLE_RBF,
         "gMLP_norm": cfg.CHGNET.GMLP_NORM,
         "readout_norm": cfg.CHGNET.READOUT_NORM,
+        "encoding": cfg.CHGNET.ENCODING,
+        "atom_input_dim": cfg.CHGNET.ATOM_INPUT_DIM,
+        "max_num_elements": cfg.CHGNET.MAX_NUM_ELEMENTS,
     }
 
     return {
@@ -92,6 +100,11 @@ def get_chgnet_model(cfg):
         print(f"=> loading checkpoint '{pretrained_path}'")
         checkpoint = torch.load(pretrained_path, map_location="cpu")
         state_dict = checkpoint.get("state_dict", checkpoint)
+        if any(key.startswith("model.") for key in state_dict):
+            state_dict = {
+                key[len("model."):] if key.startswith("model.") else key: value
+                for key, value in state_dict.items()
+            }
         try:
             result = trainer.model.load_state_dict(state_dict, strict=False)
             missing_keys = getattr(result, "missing_keys", result[0])

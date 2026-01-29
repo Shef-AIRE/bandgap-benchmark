@@ -6,3 +6,14 @@ wandb/
 saved_models/
 cif_file/
 leave_one_material_out/
+scripts/
+logs/
+figs/
+analysis_outputs/
+
+
+*.pdf
+*.pt 
+*.sh
+*.png
+*.log

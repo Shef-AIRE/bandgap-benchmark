@@ -377,7 +377,7 @@ class LEFTNetZ(nn.Module):
                 layer.reset_parameters()
 
     # @conditional_grad(torch.enable_grad())
-    def _forward(self, data):
+    def _forward(self, data, return_features: bool = False):
         device = next(self.parameters()).device
         pos = data.positions.to(device)
         batch = data.batch_idx.to(device)
@@ -436,8 +436,15 @@ class LEFTNetZ(nn.Module):
         edge_weight = torch.cat((scalar3, scalar4), dim=-1) * rbounds.unsqueeze(-1)
         edge_weight = torch.cat((edge_weight, radial_hidden, radial_emb), dim=-1)
 
-        # for i in range(self.num_layers):
-        for i in range(1):
+        feats = None
+        if return_features:
+            feats = {
+                "node_repr": s,
+                "edge_repr": edge_weight,
+                "edge_index": edge_index,
+            }
+
+        for i in range(self.num_layers):
             ds, dvec = self.message_layers[i](s, vec, edge_index, radial_emb, edge_weight, edge_diff)
 
             s = s + ds
@@ -452,10 +459,12 @@ class LEFTNetZ(nn.Module):
         s = self.last_layer(s)
         s = scatter(s, batch, dim=0, reduce=self.readout)
         s = s * self.y_std + self.y_mean
+        if return_features:
+            return s, feats
         return s
 
-    def forward(self, data):
-        return self._forward(data)
+    def forward(self, data, return_features: bool = False):
+        return self._forward(data, return_features=return_features)
 
     @property
     def num_params(self):

@@ -4,7 +4,7 @@ SOLVER:
   LR: 0.001
   BATCH_SIZE: 32
   NUM_RUNS: 1
-  NUM_FOLDS: 5
+  NUM_FOLDS: 10
   RANDOMIZE: True
   TASK: "regression"  # Choices: ['regression', 'classification']
   DISABLE_CUDA: False
@@ -36,7 +36,7 @@ CARTNET:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "cartnet"
+  LOG_DIR_NAME: "train_from_scratch/cartnet"
 
 DATASET:
   TRAIN: 'data/fine_tune/train_data.json'

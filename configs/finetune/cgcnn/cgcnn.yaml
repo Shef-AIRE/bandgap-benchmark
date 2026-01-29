@@ -17,13 +17,10 @@ MODEL:
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
-  EPOCHS: 50
+  EPOCHS: 100
   NUM_RUNS: 1
 
 
-CGCNN:
-  FEATURE_FUSION: 'leftnet'
-  LAYER_FREEZE: 'none'
 
 LOGGING:
   LOG_DIR: "saved_models"

@@ -1,10 +1,10 @@
 SOLVER:
   SEED: 42
-  EPOCHS: 1
+  EPOCHS: 200
   LR: 0.01
   BATCH_SIZE: 32
   NUM_RUNS: 1
-  NUM_FOLDS: 2
+  NUM_FOLDS: 10
   RANDOMIZE: True
   TASK: "regression"  # Choices: ['regression', 'classification']
   DISABLE_CUDA: False
@@ -18,7 +18,7 @@ SOLVER:
 
 MODEL:
   NAME: "cartnet"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'logistic', 'random_forest']
-  PRETRAINED_MODEL_PATH: ""
+  PRETRAINED_MODEL_PATH: "saved_models/cartnet/pretrain-last-epoch=154.ckpt"
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
   MAX_NBRS: 12
@@ -40,4 +40,4 @@ LOGGING:
 
 DATASET:
   TRAIN: "data/pretrain_data.json"
-  VAL: 'data/filtered_data/test_data.json'
+  VAL: 'data/fine_tune/test_data.json'
