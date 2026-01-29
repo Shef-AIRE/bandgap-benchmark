@@ -102,15 +102,15 @@ class EdgeGatedGraphConv(nn.Module):
         g.ndata["e_src"] = self.src_gate(node_feats)
         g.ndata["e_dst"] = self.dst_gate(node_feats)
         g.apply_edges(fn.u_add_v("e_src", "e_dst", "e_nodes"))
-        m = g.edata.pop("e_nodes") + self.edge_gate(edge_feats)
+        m = g.edata.pop("e_nodes") + self.edge_gate(edge_feats)  # m = src_gate(h_j) + dst_gate(h_i) + edge_gate(e_ji) = Linear(cat(u, v, e))
 
-        g.edata["sigma"] = torch.sigmoid(m)
-        g.ndata["Bh"] = self.dst_update(node_feats)
+        g.edata["sigma"] = torch.sigmoid(m)  # sigma = σ(m)
+        g.ndata["Bh"] = self.dst_update(node_feats)  # Bh is neighbor's feature transform through another linear layer
         g.update_all(
-            fn.u_mul_e("Bh", "sigma", "m"), fn.sum("m", "sum_sigma_h")
-        )
+            fn.u_mul_e("Bh", "sigma", "m"), fn.sum("m", "sum_sigma_h")  # u_mul_e use bh for the source node, for the edge_ji, source is j (neighbor!!!)
+        )  # message_ji = sigma_ji ⊙ Bh_j
         g.update_all(fn.copy_e("sigma", "m"), fn.sum("m", "sum_sigma"))
-        g.ndata["h"] = g.ndata["sum_sigma_h"] / (g.ndata["sum_sigma"] + 1e-6)
+        g.ndata["h"] = g.ndata["sum_sigma_h"] / (g.ndata["sum_sigma"] + 1e-6)  # h_i = sum_j message_ji / sum_j sigma_ji, sum then normalize
         x = self.src_update(node_feats) + g.ndata.pop("h")
 
         # node and edge updates
@@ -295,7 +295,7 @@ class ALIGNN(nn.Module):
 
     @conditional_grad(torch.enable_grad())
     def _forward(
-        self, g
+        self, g, return_features: bool = False
     ):
         """ALIGNN : start with `atom_features`.
         
@@ -332,6 +332,15 @@ class ALIGNN(nn.Module):
         bondlength = g.edata.pop("distances")
         y = self.edge_embedding(bondlength)
 
+        feats = None
+        if return_features:
+            edge_idx = torch.stack(g.edges(), dim=0) if g.num_edges() > 0 else torch.zeros((2,0),device=x.device,dtype=torch.long)
+            feats = {
+                "node_repr": x,
+                "edge_repr": y,
+                "edge_index": edge_idx,
+            }
+
         # ALIGNN updates: update node, edge, triplet features
         for alignn_layer in self.alignn_layers:
             x, y, z = alignn_layer(g, lg, x, y, z)
@@ -347,8 +356,10 @@ class ALIGNN(nn.Module):
         if self.link:
             out = self.link(out)
 
-        # keep explicit target dimension so downstream losses stay well-defined
-        return out.view(-1, self.num_targets)
+        out = out.view(-1, self.num_targets)
+        if return_features:
+            return out, feats
+        return out
 
     def build_dgl_graphs(self, batch):
         structures = getattr(batch, "structures", None)
@@ -448,10 +459,9 @@ class ALIGNN(nn.Module):
 
         return g_local, lg_local
 
-    def forward(self, batch):
+    def forward(self, batch, return_features: bool = False):
         g_tuple = self.build_dgl_graphs(batch)
-        energy = self._forward(g_tuple)
-        return energy
+        return self._forward(g_tuple, return_features=return_features)
 
     @property
     def num_params(self):

@@ -1,11 +1,11 @@
 DATASET:
- TRAIN: 'data/fine_tune/train_data.json'
- VAL: 'data/fine_tune/test_data.json'
+  TRAIN: 'data/fine_tune/train_data_25.json'
+  VAL: 'data/fine_tune/test_data.json'
 
 MODEL:
-  NAME: 'random_forest'
-  PRETRAINED_MODEL_PATH: ' '  # NOT EXIST
-  INIT_FILE: 'cif_file/atom_init.json'
+  NAME: "random_forest"
+  PRETRAINED_MODEL_PATH: ""
+  INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
   MAX_NBRS: 12
   RADIUS: 8.0
@@ -16,10 +16,13 @@ MODEL:
     min_samples_split: [2, 4, 8]
     min_samples_leaf: [1, 2, 4]
 
-
 SOLVER:
+  SEED: 42
+  NUM_FOLDS: 10
+  EPOCHS: 1
+  NUM_RUNS: 1
   RANDOMIZE: False
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "train_from_scratch/random_forest"
+  LOG_DIR_NAME: "train_from_scratch/random_forest_25"

@@ -254,7 +254,8 @@ class CHGNet(nn.Module):
         return_site_energies: bool = False,
         return_atom_feas: bool = False,
         return_crystal_feas: bool = False,
-    ) -> dict[str, Tensor | list[Tensor]]:
+        return_features: bool = False,
+    ) -> dict[str, Tensor | list[Tensor] | dict]:
         if not hasattr(batch, "positions") or not hasattr(batch, "batch_idx"):
             raise TypeError("CHGNet expects a BatchData object with positions and batch_idx.")
 
@@ -278,6 +279,7 @@ class CHGNet(nn.Module):
             return_site_energies=return_site_energies,
             return_atom_feas=return_atom_feas,
             return_crystal_feas=return_crystal_feas,
+            return_features=return_features,
         )
         prediction["e"] += comp_energy
 
@@ -517,7 +519,8 @@ class CHGNet(nn.Module):
         return_site_energies: bool = False,
         return_atom_feas: bool = False,
         return_crystal_feas: bool = False,
-    ) -> dict[str, Tensor | list[Tensor]]:
+        return_features: bool = False,
+    ) -> dict[str, Tensor | list[Tensor] | dict]:
         prediction: dict[str, Tensor | list[Tensor]] = {}
         atoms_per_graph = torch.bincount(g.atom_owners)
         prediction["atoms_per_graph"] = atoms_per_graph
@@ -540,6 +543,8 @@ class CHGNet(nn.Module):
         bond_feas = self.bond_embedding(g.bond_bases_ag)
         bond_weights_ag = self.bond_weights_ag(g.bond_bases_ag)
         bond_weights_bg = self.bond_weights_bg(g.bond_bases_bg)
+        node_repr = atom_feas
+        edge_repr = bond_feas
 
         angle_feas = (
             self.angle_embedding(g.angle_bases)
@@ -611,4 +616,11 @@ class CHGNet(nn.Module):
             energy = energy / atoms_per_graph
 
         prediction["e"] = energy
+
+        if return_features:
+            prediction["features"] = {
+                "node_repr": node_repr,
+                "edge_repr": edge_repr,
+                "edge_index": g.batched_atom_graph,
+            }
         return prediction

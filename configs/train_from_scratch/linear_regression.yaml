@@ -7,10 +7,15 @@ MODEL:
   PRETRAINED_MODEL_PATH: ' '
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
+  MAX_NBRS: 12
+  RADIUS: 8.0
   HYPERPARAMS:
     SEARCH: grid
     fit_intercept: [True, False]
     positive: [True, False]
+
+SOLVER:
+  RANDOMIZE: False
 
 LOGGING:
   LOG_DIR: "saved_models"

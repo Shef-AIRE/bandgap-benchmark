@@ -120,11 +120,17 @@ def main():
     # Prepare model and data
     model, test_loader, test_data = load_model_and_data(cfg, args.checkpoint, args.test_data, args.cif_folder)
 
-    # Setup trainer for testing
-    trainer = pl.Trainer(
-        accelerator="gpu" if int(args.devices) > 0 else "cpu",
-        devices=args.devices if int(args.devices) > 0 else None
-    )
+    # Setup trainer for testing (force CPU if GPU unavailable)
+    want_gpu = int(args.devices) > 0 and torch.cuda.is_available()
+    if want_gpu:
+        accelerator = "gpu"
+        devices = args.devices
+    else:
+        accelerator = "cpu"
+        # Lightning expects a positive int for CPU devices
+        devices = max(1, int(args.devices)) if int(args.devices) != 0 else 1
+
+    trainer = pl.Trainer(accelerator=accelerator, devices=devices)
 
     # Test the model
     test_results = trainer.test(model, dataloaders=test_loader)

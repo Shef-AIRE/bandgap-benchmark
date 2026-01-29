@@ -24,11 +24,16 @@ class CHGNetLightningWrapper(nn.Module):
         super().__init__()
         self.chgnet = chgnet
 
-    def forward(self, batch):
-        prediction = self.chgnet(batch)
-        energy = prediction["e"]
+    def forward(self, batch, return_features: bool = False):
+        prediction = self.chgnet(batch, return_features=return_features)
+        if return_features:
+            energy = prediction["e"]
+        else:
+            energy = prediction["e"]
         if energy.dim() == 1:
             energy = energy.unsqueeze(-1)
+        if return_features:
+            return energy, prediction.get("features", {})
         return energy
 
 

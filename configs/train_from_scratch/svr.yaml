@@ -7,6 +7,8 @@ MODEL:
   PRETRAINED_MODEL_PATH: '_saved_models/m1_full_lr0.01/best-mae-epoch=107-val_mae=0.39.ckpt'
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
+  MAX_NBRS: 12
+  RADIUS: 8.0
   HYPERPARAMS:
     SEARCH: grid
     C: [1, 10, 100]
@@ -14,6 +16,9 @@ MODEL:
     epsilon: [0.01, 0.1, 0.5]
     kernel: ['rbf']
 
+
+SOLVER:
+  RANDOMIZE: False
 
 LOGGING:
   LOG_DIR: "saved_models"

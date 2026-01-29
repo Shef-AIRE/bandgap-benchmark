@@ -1,0 +1,28 @@
+DATASET:
+  TRAIN: 'data/fine_tune/train_data_50.json'
+  VAL: 'data/fine_tune/test_data.json'
+
+MODEL:
+  NAME: "svm"
+  PRETRAINED_MODEL_PATH: ""
+  INIT_FILE: "cif_file/atom_init.json"
+  CIF_FOLDER: "cif_file"
+  MAX_NBRS: 12
+  RADIUS: 8.0
+  HYPERPARAMS:
+    SEARCH: grid
+    C: [1, 10, 100]
+    gamma: [0.01, 0.1, 1]
+    epsilon: [0.01, 0.1, 0.5]
+    kernel: ['rbf']
+
+SOLVER:
+  SEED: 42
+  NUM_FOLDS: 10
+  EPOCHS: 1
+  NUM_RUNS: 1
+  RANDOMIZE: False
+
+LOGGING:
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "train_from_scratch/svr_50"

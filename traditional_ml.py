@@ -2,6 +2,7 @@ import json
 import os
 from typing import Any, Dict, Optional
 
+import joblib
 import numpy as np
 import yaml
 from sklearn.ensemble import RandomForestRegressor
@@ -111,6 +112,9 @@ def run_traditional_model(cfg, train_dataset, val_dataset, fold_label: str, test
         for idx, imp in enumerate(importances_mean):
             f.write(f"Feature {idx:2d}: {imp}\n")
 
+    model_path = os.path.join(cfg.LOGGING.LOG_DIR, f"model_{safe_label}.joblib")
+    joblib.dump(model, model_path)
+
     best_params_file = None
     if best_params:
         best_params_file = os.path.join(
@@ -163,4 +167,5 @@ def run_traditional_model(cfg, train_dataset, val_dataset, fold_label: str, test
         "test_metrics": test_metrics,
         "feature_importances_path": feature_importances_file,
         "best_params_path": best_params_file,
+        "model_path": model_path,
     }
