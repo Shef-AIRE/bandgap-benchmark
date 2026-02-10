@@ -5,7 +5,7 @@ import torch
 
 from models.cartnet.CartNet import CartNet
 from models.cartnet.CartNet_prop import CartNet_prop
-from trainer import MaterialsTrainer
+from realmat_bag.pipeline.trainer import MaterialsTrainer
 
 
 def get_config(cfg):

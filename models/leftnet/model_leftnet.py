@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from trainer import MaterialsTrainer
+from realmat_bag.pipeline.trainer import MaterialsTrainer
 from models.leftnet.leftnet_prop import LEFTNetProp
 from models.leftnet.leftnet_z import LEFTNetZ
 

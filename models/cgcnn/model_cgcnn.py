@@ -5,7 +5,7 @@ import torch
 
 from models.cgcnn.CGCNN import CrystalGraphConvNet
 
-from trainer import MaterialsTrainer
+from realmat_bag.pipeline.trainer import MaterialsTrainer
 
 
 

@@ -8,6 +8,7 @@ cif_file/
 leave_one_material_out/
 scripts/
 logs/
+lightning_logs/
 figs/
 analysis_outputs/
 

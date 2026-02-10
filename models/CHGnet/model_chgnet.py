@@ -6,7 +6,7 @@ import torch
 from torch import nn
 
 from models.CHGnet.model.CHGNet import CHGNet
-from trainer import MaterialsTrainer
+from realmat_bag.pipeline.trainer import MaterialsTrainer
 
 
 def _to_sequence(value):

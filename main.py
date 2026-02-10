@@ -29,7 +29,7 @@ from models.leftnet.model_leftnet import get_leftnet_model
 from models.cartnet.model_cartnet import get_cartnet_model
 from models.alignn.model_alignn import get_alignn_model
 from models.CHGnet.model_chgnet import get_chgnet_model
-from trainer import MetricsCallback, mean_relative_error
+from realmat_bag.pipeline.trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
 from traditional_ml import run_traditional_model
 

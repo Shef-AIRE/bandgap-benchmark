@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import torch
 
-from trainer import MaterialsTrainer
+from realmat_bag.pipeline.trainer import MaterialsTrainer
 from .alignn import ALIGNN
 
 

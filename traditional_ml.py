@@ -17,8 +17,8 @@ from sklearn.metrics import (
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.svm import SVR
 
-from loaddata.dataloader import extract_features
-from trainer import mean_relative_error
+from realmat_bag.loaddata.dataloader import extract_features
+from realmat_bag.pipeline.trainer import mean_relative_error
 
 
 def _build_estimator(model_name: str, seed: int) -> Any:
@@ -27,6 +27,7 @@ def _build_estimator(model_name: str, seed: int) -> Any:
     if model_name == "linear_regression":
         return LinearRegression()
     if model_name == "svm":
+        # kernel will be set via hyperparams if provided
         return SVR()
     raise ValueError(f"Unsupported traditional model: {model_name}")
 
