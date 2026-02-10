@@ -5,26 +5,19 @@ from datetime import datetime
 import json
 import pandas as pd
 import pytorch_lightning as pl
-from sklearn.inspection import permutation_importance
 from sklearn.model_selection import KFold
-from sklearn.metrics import make_scorer, mean_absolute_error, mean_squared_error, r2_score
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
 import torch
 import numpy as np
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from sklearn.utils import shuffle
 import random
 from pathlib import Path
 
-from loaddata.dataloader import extract_features
+from realmat_bag.loaddata.cifdata import CIFData
+from realmat_bag.loaddata.collate import collate_pool_leftnet
 from models.cgcnn.model_cgcnn import get_cgcnn_model
-from loaddata.cifdata import CIFData
-from loaddata.collate import collate_pool_leftnet
 from models.leftnet.model_leftnet import get_leftnet_model
 from models.cartnet.model_cartnet import get_cartnet_model
 from models.alignn.model_alignn import get_alignn_model
@@ -455,8 +448,7 @@ def main():
                 continue
 
             model = get_model(cfg)
-            if cfg.MODEL.NAME not in ("alignn", "chgnet"):
-                model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
+            model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
 
             wandb_logger, log_dir = setup_logger(cfg, fold_label)
             trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, fold_label)

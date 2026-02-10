@@ -75,16 +75,4 @@ def get_cgcnn_model(cfg):
 
     trainer = MaterialsTrainer(model=model, **train_params_local)
 
-    # Optionally resume from a checkpoint
-    if hasattr(cfg, 'PRETRAINED_MODEL_PATH') and os.path.isfile(cfg.PRETRAINED_MODEL_PATH):
-        print("=> loading checkpoint '{}'".format(cfg.PRETRAINED_MODEL_PATH))
-        checkpoint = torch.load(cfg.PRETRAINED_MODEL_PATH)
-        trainer.model.load_state_dict(checkpoint['state_dict'])
-        if 'optimizer' in checkpoint:
-            trainer.configure_optimizers()[0].load_state_dict(checkpoint['optimizer'])
-        print("=> loaded checkpoint '{}' (epoch {})".format(cfg.PRETRAINED_MODEL_PATH,
-                                                            checkpoint.get('epoch', 'unknown')))
-    else:
-        print("=> no checkpoint found at '{}'".format(cfg.MODEL.PRETRAINED_MODEL_PATH))
-
     return trainer

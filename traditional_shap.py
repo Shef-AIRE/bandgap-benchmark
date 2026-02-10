@@ -26,8 +26,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from config import get_cfg_defaults
-from loaddata.cifdata import CIFData
-from loaddata.dataloader import extract_features
+from realmat_bag.loaddata.cifdata import CIFData
+from realmat_bag.loaddata.dataloader import extract_features
 from traditional_ml import _build_estimator
 
 FEATURE_BLOCKS = [

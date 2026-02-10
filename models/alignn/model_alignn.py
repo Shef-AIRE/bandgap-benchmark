@@ -87,29 +87,6 @@ def get_alignn_model(cfg):
     model = ALIGNN(**model_params)
     trainer = MaterialsTrainer(model=model, **train_params)
 
-    pretrained_path = getattr(cfg.MODEL, "PRETRAINED_MODEL_PATH", "")
-    if pretrained_path and os.path.isfile(pretrained_path):
-        checkpoint = torch.load(pretrained_path, map_location="cpu")
-        state_dict = checkpoint.get("state_dict", checkpoint)
-        if any(key.startswith("model.") for key in state_dict):
-            state_dict = {
-                key[len("model.") :]: value for key, value in state_dict.items()
-            }
-
-        missing, unexpected = trainer.model.load_state_dict(
-            state_dict, strict=False
-        )
-        if missing:
-            print(f"Missing keys when loading ALIGNN checkpoint: {missing}")
-        if unexpected:
-            print(f"Unexpected keys when loading ALIGNN checkpoint: {unexpected}")
-        print(
-            f"Loaded ALIGNN checkpoint from {pretrained_path} "
-            f"(epoch {checkpoint.get('epoch', 'unknown')})"
-        )
-    else:
-        print(f"=> no checkpoint found at '{cfg.MODEL.PRETRAINED_MODEL_PATH}'")
-
     return trainer
 
 

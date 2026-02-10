@@ -8,7 +8,6 @@ import numpy as np
 from torch.utils.data import DataLoader
 import random
 
-from realmat_bag.loaddata.dataloader import get_train_val_test_loader
 from models.cgcnn.model_cgcnn import get_cgcnn_model
 from realmat_bag.loaddata.cifdata import CIFData
 from realmat_bag.loaddata.collate import collate_pool_leftnet

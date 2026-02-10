@@ -95,33 +95,4 @@ def get_chgnet_model(cfg):
     wrapped_model = CHGNetLightningWrapper(chgnet=chgnet)
     trainer = MaterialsTrainer(model=wrapped_model, **train_params)
 
-    pretrained_path = getattr(cfg.MODEL, "PRETRAINED_MODEL_PATH", "")
-    if pretrained_path and os.path.isfile(pretrained_path):
-        print(f"=> loading checkpoint '{pretrained_path}'")
-        checkpoint = torch.load(pretrained_path, map_location="cpu")
-        state_dict = checkpoint.get("state_dict", checkpoint)
-        if any(key.startswith("model.") for key in state_dict):
-            state_dict = {
-                key[len("model."):] if key.startswith("model.") else key: value
-                for key, value in state_dict.items()
-            }
-        try:
-            result = trainer.model.load_state_dict(state_dict, strict=False)
-            missing_keys = getattr(result, "missing_keys", result[0])
-            unexpected_keys = getattr(result, "unexpected_keys", result[1])
-        except RuntimeError:
-            result = trainer.load_state_dict(state_dict, strict=False)
-            missing_keys = getattr(result, "missing_keys", result[0])
-            unexpected_keys = getattr(result, "unexpected_keys", result[1])
-        if missing_keys:
-            print(f"Missing keys when loading CHGNet checkpoint: {missing_keys}")
-        if unexpected_keys:
-            print(f"Unexpected keys when loading CHGNet checkpoint: {unexpected_keys}")
-        print(
-            f"=> loaded checkpoint '{pretrained_path}' "
-            f"(epoch {checkpoint.get('epoch', 'unknown')})"
-        )
-    else:
-        print(f"=> no checkpoint found at '{cfg.MODEL.PRETRAINED_MODEL_PATH}'")
-
     return trainer
