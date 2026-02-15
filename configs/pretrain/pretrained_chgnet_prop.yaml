@@ -20,7 +20,3 @@ CHGNET:
 LOGGING:
   LOG_DIR: "saved_models"
   LOG_DIR_NAME: "pretrain/chgnet_prop"
-
-OUTPUT:
-  LOOP_RESULTS: "result/chgnet_prop_pretrain/loop.csv"
-  PREDICTIONS: "result/chgnet_prop_pretrain/predict.csv"

@@ -17,7 +17,7 @@ SOLVER:
 
 MODEL:
   NAME: "cartnet"
-  PRETRAINED_MODEL_PATH: "saved_models/pretrain/cartnet_prop/pretrain-last-epoch=168.ckpt"
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
   MAX_NBRS: 12

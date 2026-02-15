@@ -4,7 +4,7 @@ DATASET:
 
 MODEL:
   NAME: "leftnet"
-  PRETRAINED_MODEL_PATH: " " # NOT EXIST
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
@@ -20,4 +20,4 @@ LEFTNET:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "leftnet/m1_full_lr0.01_nofusion"
+  LOG_DIR_NAME: "pretrain/leftnet_z"

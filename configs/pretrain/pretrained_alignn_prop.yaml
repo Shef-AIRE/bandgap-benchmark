@@ -35,7 +35,3 @@ ALIGNN:
 LOGGING:
   LOG_DIR: "saved_models"
   LOG_DIR_NAME: "pretrain/alignn_prop"
-
-OUTPUT:
-  LOOP_RESULTS: "result/alignn_prop_pretrain/loop.csv"
-  PREDICTIONS: "result/alignn_prop_pretrain/predict.csv"

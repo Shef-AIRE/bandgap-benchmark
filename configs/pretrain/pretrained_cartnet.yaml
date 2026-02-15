@@ -17,7 +17,7 @@ SOLVER:
 
 MODEL:
   NAME: "cartnet"  # Choices: ['cgcnn', 'leftnet', 'cartnet', 'logistic', 'random_forest']
-  PRETRAINED_MODEL_PATH: "saved_models/cartnet/pretrain-last-epoch=154.ckpt"
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
   MAX_NBRS: 12
@@ -35,7 +35,7 @@ CARTNET:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "cartnet"
+  LOG_DIR_NAME: "pretrain/cartnet_z"
 
 DATASET:
   TRAIN: "data/pretrain_data.json"
