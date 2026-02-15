@@ -17,6 +17,65 @@ def swish(x):
     return x * torch.sigmoid(x)
 
 
+def _build_pbc_edge_tensors_from_batch(batch, device, cutoff: float):
+    structures = getattr(batch, "structures", None)
+    if structures is None:
+        raise TypeError("LEFTNet PBC mode expects batch.structures.")
+
+    positions_all = batch.positions.to(device=device)
+    batch_idx = batch.batch_idx.to(device=device, dtype=torch.long)
+    dtype = positions_all.dtype
+
+    edge_index_parts = []
+    edge_vector_parts = []
+    edge_distance_parts = []
+
+    for graph_idx, structure in enumerate(structures):
+        atom_indices = torch.nonzero(batch_idx == graph_idx, as_tuple=False).flatten()
+        if atom_indices.numel() == 0:
+            continue
+
+        center_index, neighbor_index, image, _ = structure.get_neighbor_list(
+            r=cutoff, sites=structure.sites, numerical_tol=1e-8
+        )
+        if len(center_index) == 0:
+            continue
+
+        center_local = torch.as_tensor(center_index, dtype=torch.long, device=device)
+        neighbor_local = torch.as_tensor(neighbor_index, dtype=torch.long, device=device)
+        image_local = torch.as_tensor(image, dtype=dtype, device=device)
+
+        center_global = atom_indices.index_select(0, center_local)
+        neighbor_global = atom_indices.index_select(0, neighbor_local)
+
+        pos_local = positions_all.index_select(0, atom_indices)
+        lattice = torch.as_tensor(structure.lattice.matrix, dtype=dtype, device=device)
+        edge_vector = (
+            pos_local.index_select(0, neighbor_local)
+            + image_local @ lattice
+            - pos_local.index_select(0, center_local)
+        )
+        edge_distance = torch.linalg.norm(edge_vector, dim=-1)
+        edge_index = torch.stack((neighbor_global, center_global), dim=0)
+
+        edge_index_parts.append(edge_index)
+        edge_vector_parts.append(edge_vector)
+        edge_distance_parts.append(edge_distance)
+
+    if not edge_index_parts:
+        return (
+            torch.zeros((2, 0), dtype=torch.long, device=device),
+            torch.zeros((0, 3), dtype=dtype, device=device),
+            torch.zeros(0, dtype=dtype, device=device),
+        )
+
+    return (
+        torch.cat(edge_index_parts, dim=1),
+        torch.cat(edge_vector_parts, dim=0),
+        torch.cat(edge_distance_parts, dim=0),
+    )
+
+
 ## radial basis function to embed distances
 ## add comments: based on XXX code
 class rbf_emb(nn.Module):
@@ -55,22 +114,13 @@ class rbf_emb(nn.Module):
 
 
 class NeighborEmb(MessagePassing):
-    def __init__(self, hid_dim: int, input_dim=92):
+    def __init__(self, hid_dim: int):
         super(NeighborEmb, self).__init__(aggr="add")
-        # self.embedding = nn.Embedding(95, hid_dim)
         self.hid_dim = hid_dim
-        self.input_dim = input_dim
-        self.fc = nn.Linear(self.input_dim, self.hid_dim)
-        self.ln_emb = nn.LayerNorm(hid_dim, elementwise_affine=False)
 
-    def forward(self, z, edge_index, embs):
- 
-        """Atom Embedding + Neighborhours Embedding"""
-        z_emb = self.ln_emb(self.fc(z)) # shape: (num_nodes, hidden_channels)
-        s_neighbors = self.propagate(edge_index, x=z_emb, norm=embs)
-        z_emb = z_emb + s_neighbors
-        # s = s + s_neighbors
-        return z_emb # shape: (num_nodes, hidden_channels)
+    def forward(self, node_hidden, edge_index, embs):
+        s_neighbors = self.propagate(edge_index, x=node_hidden, norm=embs)
+        return node_hidden + s_neighbors
 
     def message(self, x_j, norm):
         return norm.view(-1, self.hid_dim) * x_j
@@ -301,11 +351,14 @@ class GatedEquivariantBlock(nn.Module):
         x = self.act(x)
         return x, v
 
-class LEFTNetProp(nn.Module):
+class LEFTNet(nn.Module):
     def __init__(
         self,
         bond_feat_dim,
         num_targets,  # not used
+        *,
+        encoding: str = "prop",
+        prop_input_dim: int = 92,
         otf_graph=False,
         use_pbc=True,
         regress_forces=False,
@@ -321,7 +374,7 @@ class LEFTNetProp(nn.Module):
         eps=1e-10,
         dropout=0.5
     ):
-        super(LEFTNetProp, self).__init__()
+        super(LEFTNet, self).__init__()
         self.y_std = y_std
         self.y_mean = y_mean
         self.eps = eps
@@ -335,9 +388,17 @@ class LEFTNetProp(nn.Module):
         self.use_pbc = use_pbc
         self.otf_graph = otf_graph
         self.direct_forces = direct_forces
+        self.encoding = encoding
 
-        self.z_emb_ln = nn.LayerNorm(hidden_channels, elementwise_affine=False)
-        self.z_emb = Embedding(95, hidden_channels)
+        self.node_ln = nn.LayerNorm(hidden_channels, elementwise_affine=False)
+        if encoding == "z":
+            self.z_emb = Embedding(95, hidden_channels)
+            self.atom_fea_proj = None
+        elif encoding == "prop":
+            self.z_emb = None
+            self.atom_fea_proj = nn.Linear(prop_input_dim, hidden_channels)
+        else:
+            raise ValueError(f"Unsupported LEFTNet encoding: {encoding}")
         self.dropout = nn.Dropout(p=dropout)
 
         self.radial_emb = rbf_emb(num_radial, cutoff)
@@ -375,7 +436,11 @@ class LEFTNetProp(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        self.z_emb.reset_parameters()
+        if self.z_emb is not None:
+            self.z_emb.reset_parameters()
+        if self.atom_fea_proj is not None:
+            self.atom_fea_proj.reset_parameters()
+        self.node_ln.reset_parameters()
         self.radial_emb.reset_parameters()
         for layer in self.message_layers:
             layer.reset_parameters()
@@ -394,14 +459,24 @@ class LEFTNetProp(nn.Module):
         device = next(self.parameters()).device
         pos = data.positions.to(device)
         batch = data.batch_idx.to(device)
-        z = data.atom_fea.to(device)
 
-        edge_index = radius_graph(pos, r=self.cutoff, batch=batch, max_num_neighbors=1000)
-        edge_index = edge_index.to(device)
+        if self.encoding == "z":
+            node_hidden = self.node_ln(self.z_emb(data.atom_num.long().to(device)))
+        else:
+            node_hidden = self.node_ln(self.atom_fea_proj(data.atom_fea.to(device)))
+
+        if self.use_pbc:
+            edge_index, vecs, dist = _build_pbc_edge_tensors_from_batch(
+                batch=data, device=device, cutoff=self.cutoff
+            )
+        else:
+            edge_index = radius_graph(pos, r=self.cutoff, batch=batch, max_num_neighbors=1000)
+            edge_index = edge_index.to(device)
+            j, i = edge_index
+            vecs = pos[j] - pos[i]
+            dist = vecs.norm(dim=-1) # scalar distance between atom i and j, length: num_edges
 
         j, i = edge_index
-        vecs = pos[j] - pos[i]
-        dist = vecs.norm(dim=-1) # scalar distance between atom i and j, length: num_edges
 
         radial_emb = self.radial_emb(dist) # RBF, shape: (num_edges, num_radial=32), embedding for raw distance
         radial_hidden = self.radial_lin(radial_emb) # MLP
@@ -415,7 +490,7 @@ class LEFTNetProp(nn.Module):
 
         # init invariant node features
         # shape: (num_nodes, hidden_channels)
-        s = self.neighbor_emb(z, edge_index, radial_hidden) # z (num_nodes, atom_encoding), z_emb (num_nodes, hidden_channels); s=z_emb+neighbor_emb, shape: (num_nodes, hidden_channels)
+        s = self.neighbor_emb(node_hidden, edge_index, radial_hidden)
 
         # init equivariant node features
         # shape: (num_nodes, 3, hidden_channels)
@@ -424,8 +499,9 @@ class LEFTNetProp(nn.Module):
         # bulid edge-wise frame
         edge_diff = vecs
         edge_diff = edge_diff / (dist.unsqueeze(1) + self.eps) # normalize the edge_diff
-        # noise = torch.clip(torch.empty(1,3).to(z.device).normal_(mean=0.0, std=0.1), min=-0.1, max=0.1)
-        edge_cross = torch.cross(pos[i], pos[j])
+        # noise = torch.clip(torch.empty(1,3).to(node_hidden.device).normal_(mean=0.0, std=0.1), min=-0.1, max=0.1)
+        neighbor_pos = pos[i] + edge_diff
+        edge_cross = torch.cross(pos[i], neighbor_pos)
         edge_cross = edge_cross / ((torch.sqrt(torch.sum((edge_cross) ** 2, 1).unsqueeze(1))) + self.eps)
         edge_vertical = torch.cross(edge_diff, edge_cross)
         # shape: (num_edges, 3, 3)
@@ -493,6 +569,3 @@ class LEFTNetProp(nn.Module):
     @property
     def num_params(self):
         return sum(p.numel() for p in self.parameters())
-    
-
-    

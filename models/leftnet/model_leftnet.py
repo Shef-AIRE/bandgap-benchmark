@@ -1,8 +1,7 @@
 from copy import deepcopy
 
 from realmat_bag.pipeline.trainer import MaterialsTrainer
-from models.leftnet.leftnet_prop import LEFTNetProp
-from models.leftnet.leftnet_z import LEFTNetZ
+from models.leftnet.leftnet import LEFTNet
 
 
 def get_config(cfg):
@@ -59,14 +58,12 @@ def get_leftnet_model(cfg):
     num_atoms = 1
     bond_feat_dim = leftnet_params_local.get("num_gaussians", 50)
 
-    if encoding == "z":
-        model = LEFTNetZ(
-            bond_feat_dim=bond_feat_dim, num_targets=leftnet_params_local.get("output_dim"), **leftnet_params_local  # not used  # not used
-        )
-    elif encoding == "prop":
-        model = LEFTNetProp(
-            bond_feat_dim=bond_feat_dim, num_targets=leftnet_params_local.get("output_dim"), **leftnet_params_local  # not used  # not used
-        )
+    model = LEFTNet(
+        bond_feat_dim=bond_feat_dim,
+        num_targets=leftnet_params_local.get("output_dim"),
+        encoding=encoding,
+        **leftnet_params_local,
+    )
     # return model
     trainer = MaterialsTrainer(model=model, **train_params_local)
 
