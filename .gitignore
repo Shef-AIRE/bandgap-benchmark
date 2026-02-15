@@ -11,6 +11,7 @@ logs/
 lightning_logs/
 figs/
 analysis_outputs/
+.vscode/
 
 
 *.pdf
