@@ -33,8 +33,4 @@ ALIGNN:
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "pretrain/alignn"
-
-OUTPUT:
-  LOOP_RESULTS: "result/alignn_pretrain/loop_200epochs.csv"
-  PREDICTIONS: "result/alignn_pretrain/predict.csv"
+  LOG_DIR_NAME: "pretrain/alignn_z"
