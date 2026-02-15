@@ -13,8 +13,8 @@ SOLVER:
   NUM_FOLDS: 10
   EPOCHS: 200
   NUM_RUNS: 1
-  
 
+ALIGNN:
 
   ENCODING: "prop"
 
