@@ -11,7 +11,6 @@ SOLVER:
   NUM_FOLDS: 10
   EPOCHS: 100
   NUM_RUNS: 1
-  BATCH_SIZE: 32
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: feature_ood/chgnet_no_pretrain

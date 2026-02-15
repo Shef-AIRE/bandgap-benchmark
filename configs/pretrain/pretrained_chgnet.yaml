@@ -4,25 +4,19 @@ DATASET:
 
 MODEL:
   NAME: "chgnet"
-  PRETRAINED_MODEL_PATH: "saved_models/chgnet_cutoff5/best.ckpt"
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 SOLVER:
   LR: 0.01
   NUM_FOLDS: 10
-  EPOCHS: 1
+  EPOCHS: 200
   NUM_RUNS: 1
-  BATCH_SIZE: 32
 
 CHGNET:
   ENCODING: "z"
-  ATOM_GRAPH_CUTOFF: 8.0
-  BOND_GRAPH_CUTOFF: 3.0
-  ATOM_INPUT_DIM: 92
-  MAX_NUM_ELEMENTS: 94
 
 LOGGING:
   LOG_DIR: "saved_models"
   LOG_DIR_NAME: "pretrain/chgnet_z"
-

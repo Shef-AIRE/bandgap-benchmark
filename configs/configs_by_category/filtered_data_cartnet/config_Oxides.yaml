@@ -19,7 +19,6 @@ MODEL:
 OUTPUT:
   DIR: predictions/cartnet/Oxides
 SOLVER:
-  BATCH_SIZE: 64
   DISABLE_CUDA: false
   EPOCHS: 50
   LR: 0.001

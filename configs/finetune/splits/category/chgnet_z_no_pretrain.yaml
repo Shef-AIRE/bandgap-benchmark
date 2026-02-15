@@ -5,15 +5,15 @@ DATASET:
   SPLIT_GLOB: data/split_by_category/*.train.json
 MODEL:
   NAME: chgnet
-  PRETRAINED_MODEL_PATH: 'saved_models/chgnet_cutoff5/best.ckpt'
+  PRETRAINED_MODEL_PATH: ''
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
 SOLVER:
   LR: 0.001
-  NUM_FOLDS: 10
   EPOCHS: 100
-  NUM_RUNS: 1
-  BATCH_SIZE: 32
+  NUM_FOLDS: 10
+CHGNET:
+  ENCODING: z
 LOGGING:
   LOG_DIR: saved_models
-  LOG_DIR_NAME: split_by_category/chgnet
+  LOG_DIR_NAME: split_by_category/chgnet_z_no_pretrain
