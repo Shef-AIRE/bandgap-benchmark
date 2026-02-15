@@ -11,17 +11,6 @@ SOLVER:
   NUM_FOLDS: 10
   EPOCHS: 100
   NUM_RUNS: 1
-ALIGNN:
-  HIDDEN_DIM: 160
-  NUM_LAYERS: 6
-  NUM_RBF: 64
-  DROPOUT: 0.05
-  READOUT: mean
-  ACTIVATION: silu
-  RBF_TRAINABLE: false
-  MAX_NEIGHBORS: 1000
-  ENCODING: prop
-  MAX_NUM_ELEMENTS: 94
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: feature_ood/alignn_prop_no_pretrain

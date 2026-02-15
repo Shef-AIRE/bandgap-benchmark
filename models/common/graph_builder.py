@@ -65,7 +65,37 @@ def _empty_graph_pair(device) -> Tuple[DGLGraph, DGLGraph]:
     return empty, empty_lg
 
 
-def _build_graph_local_from_structure(structure, cutoff: float) -> tuple[BaseGraph, int]:
+def _limit_neighbors_per_center(
+    center_index: np.ndarray,
+    neighbor_index: np.ndarray,
+    image: np.ndarray,
+    distance: np.ndarray,
+    max_neighbors: int | None,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    if max_neighbors is None or max_neighbors <= 0:
+        return center_index, neighbor_index, image, distance
+
+    keep = np.zeros(len(center_index), dtype=bool)
+    order = np.argsort(distance, kind="mergesort")
+    counts: dict[int, int] = {}
+    for idx in order:
+        center = int(center_index[idx])
+        count = counts.get(center, 0)
+        if count < max_neighbors:
+            keep[idx] = True
+            counts[center] = count + 1
+
+    return (
+        center_index[keep],
+        neighbor_index[keep],
+        image[keep],
+        distance[keep],
+    )
+
+
+def _build_graph_local_from_structure(
+    structure, cutoff: float, max_neighbors: int | None = None
+) -> tuple[BaseGraph, int]:
     center_index, neighbor_index, image, distance = structure.get_neighbor_list(
         r=cutoff, sites=structure.sites, numerical_tol=1e-8
     )
@@ -73,6 +103,13 @@ def _build_graph_local_from_structure(structure, cutoff: float) -> tuple[BaseGra
     neighbor_index = np.ascontiguousarray(neighbor_index, dtype=np.int64)
     image = np.ascontiguousarray(image, dtype=np.int64)
     distance = np.ascontiguousarray(distance, dtype=np.float64)
+    center_index, neighbor_index, image, distance = _limit_neighbors_per_center(
+        center_index=center_index,
+        neighbor_index=neighbor_index,
+        image=image,
+        distance=distance,
+        max_neighbors=max_neighbors,
+    )
     n_atoms = len(structure)
 
     if fast_make_graph is not None and center_index.size > 0:
@@ -165,8 +202,11 @@ def build_graph_from_structure(
     device,
     cutoff: float,
     encoding: str,
+    max_neighbors: int | None = None,
 ):
-    graph_local, n_atoms = _build_graph_local_from_structure(structure, cutoff)
+    graph_local, n_atoms = _build_graph_local_from_structure(
+        structure, cutoff, max_neighbors=max_neighbors
+    )
     atom_graph_local, _, _, image_local = _graph_local_to_tensors(
         graph_local, device=device, dtype=TORCH_DTYPE
     )
@@ -191,7 +231,9 @@ def build_graph_from_structure(
     return g_local, lg_local
 
 
-def build_dgl_graphs_from_batch(batch, device, cutoff: float, encoding: str):
+def build_dgl_graphs_from_batch(
+    batch, device, cutoff: float, encoding: str, max_neighbors: int | None = None
+):
     structures = getattr(batch, "structures", None)
     if structures is None:
         raise TypeError(
@@ -208,6 +250,7 @@ def build_dgl_graphs_from_batch(batch, device, cutoff: float, encoding: str):
             device=device,
             cutoff=cutoff,
             encoding=encoding,
+            max_neighbors=max_neighbors,
         )
         graphs.append(g_local)
         line_graphs.append(lg_local)

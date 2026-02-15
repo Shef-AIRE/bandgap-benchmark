@@ -127,8 +127,8 @@ class CrystalGraphConverter(nn.Module):
         lattice = torch.tensor(
             structure.lattice.matrix, dtype=TORCH_DTYPE, requires_grad=True
         )
-        center_index, neighbor_index, image, distance = self._get_neighbor_list_no_pbc(
-            structure
+        center_index, neighbor_index, image, distance = structure.get_neighbor_list(
+            r=self.atom_graph_cutoff, sites=structure.sites, numerical_tol=1e-8
         )
 
         # Make Graph
@@ -264,36 +264,6 @@ class CrystalGraphConverter(nn.Module):
         gc.set_threshold(gc_saved[0])
 
         return graph
-
-    def _get_neighbor_list_no_pbc(
-        self,
-        structure: Structure,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Compute neighbor list without periodic boundary conditions.
-
-        Args:
-            structure (Structure): pymatgen structure to process.
-
-        Returns:
-            Tuple of (center indices, neighbor indices, zero images, distances).
-        """
-        coords = np.asarray(structure.cart_coords, dtype=np.float64)
-        if len(coords) == 0:
-            empty = np.empty((0,), dtype=np.int64)
-            return empty, empty, np.empty((0, 3), dtype=np.int64), np.empty(
-                (0,), dtype=np.float64
-            )
-
-        disp = coords[:, None, :] - coords[None, :, :]
-        distances = np.linalg.norm(disp, axis=-1)
-
-        mask = (distances > 1e-8) & (distances <= self.atom_graph_cutoff)
-        center_index, neighbor_index = np.nonzero(mask)
-
-        zeros = np.zeros((len(center_index), 3), dtype=np.int64)
-        edge_distances = distances[center_index, neighbor_index]
-
-        return center_index, neighbor_index, zeros, edge_distances
 
     def set_isolated_atom_response(
         self, on_isolated_atoms: Literal["ignore", "warn", "error"]

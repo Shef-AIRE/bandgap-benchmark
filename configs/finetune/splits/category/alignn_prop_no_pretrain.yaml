@@ -12,12 +12,6 @@ SOLVER:
   LR: 0.001
   EPOCHS: 100
   NUM_FOLDS: 10
-ALIGNN:
-  HIDDEN_DIM: 160
-  NUM_LAYERS: 6
-  NUM_RBF: 64
-  DROPOUT: 0.05
-  ENCODING: prop
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: split_by_category/alignn_prop_no_pretrain

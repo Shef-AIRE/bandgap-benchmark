@@ -36,6 +36,10 @@ def get_config(cfg):
     gcn_layers = _get_or_default(alignn_cfg, "GCN_LAYERS", alignn_cfg.NUM_LAYERS)
     link = _get_or_default(alignn_cfg, "LINK", "identity")
     regress_forces = _get_or_default(alignn_cfg, "REGRESS_FORCES", False)
+    atom_graph_cutoff = _get_or_default(
+        alignn_cfg, "ATOM_GRAPH_CUTOFF", _get_or_default(alignn_cfg, "CUTOFF", 5.0)
+    )
+    bond_graph_cutoff = _get_or_default(alignn_cfg, "BOND_GRAPH_CUTOFF", atom_graph_cutoff)
 
     return {
         "train_params": {
@@ -64,7 +68,9 @@ def get_config(cfg):
             "output_dim": common_cfg.OUTPUT_DIM,
             "link": link,
             "regress_forces": regress_forces,
-            "cutoff": alignn_cfg.CUTOFF,
+            "atom_graph_cutoff": atom_graph_cutoff,
+            "bond_graph_cutoff": bond_graph_cutoff,
+            "max_neighbors": _get_or_default(alignn_cfg, "MAX_NEIGHBORS", 24),
             "readout": alignn_cfg.READOUT,
             "encoding": alignn_cfg.ENCODING,
             "max_num_elements": alignn_cfg.MAX_NUM_ELEMENTS,

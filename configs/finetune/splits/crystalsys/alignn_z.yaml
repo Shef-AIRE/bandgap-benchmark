@@ -16,8 +16,6 @@ SOLVER:
   EPOCHS: 100
   NUM_RUNS: 1
 
-ALIGNN:
-  ENCODING: "z"
 
 LOGGING:
   LOG_DIR: "saved_models"
