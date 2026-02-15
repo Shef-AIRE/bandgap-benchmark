@@ -5,9 +5,9 @@ from types import SimpleNamespace
 from typing import Literal
 
 import torch
-from torch import Tensor, nn
-from torch_geometric.nn import radius_graph
+from torch import Tensor, device, nn
 
+from models.common.graph_builder import build_graph_components
 from .composition_model import AtomRef
 from .encoders import AngleEncoder, AtomEmbedding, BondEncoder
 from .functions import GatedMLP, MLP, find_activation, find_normalization
@@ -267,7 +267,7 @@ class CHGNet(nn.Module):
                 raise TypeError("BatchData must contain atom_fea when encoding='prop'.")
             prop_atom_fea = batch.atom_fea.to(device=device, dtype=dtype)
 
-        simple_graphs, graph = self._assemble_from_batch(batch)
+        simple_graphs, graph = self._assemble_from_batch(batch, bond_basis_expansion=self.bond_basis_expansion, angle_basis_expansion=self.angle_basis_expansion)
 
         comp_energy = (
             0 if self.composition_model is None else self.composition_model(simple_graphs)
@@ -291,7 +291,10 @@ class CHGNet(nn.Module):
 
         return prediction
 
-    def _assemble_from_batch(self, batch):
+    def _assemble_from_batch(self, 
+                             batch, 
+                             bond_basis_expansion: nn.Module, 
+                             angle_basis_expansion: nn.Module):
         device = next(self.parameters()).device
         dtype = self.bond_embedding.weight.dtype
 
@@ -301,6 +304,8 @@ class CHGNet(nn.Module):
         batch_size = int(batch.batch_size)
 
         atomic_numbers = []
+        atom_positions = []
+        volumns = []
         bond_bases_ag = []
         bond_bases_bg = []
         angle_bases = []
@@ -308,22 +313,40 @@ class CHGNet(nn.Module):
         bond_graphs = []
         directed2undirected = []
         atom_owners = []
+        atom_offset_idx = n_directed = 0
         simple_graphs = []
 
-        identity_lattice = torch.eye(3, dtype=dtype, device=device)
+        if not hasattr(batch, "lattices"):
+            raise TypeError(
+                "CHGNet expects batch.lattices for PBC-aware bond construction."
+            )
         atom_offset = 0
         undirected_offset = 0
 
         for graph_idx in range(batch_size):
+            # Atoms
+            # take atoms that belong to the current graph
             indices = torch.nonzero(batch_idx == graph_idx, as_tuple=False).flatten()
             if indices.numel() == 0:
                 continue
+            atom_num_local = atom_numbers_all.index_select(0, indices)
+            atomic_numbers.append(atom_num_local)
+
+    
+            simple_graphs.append(SimpleNamespace(atomic_number=atom_num_local))
+
+            lattice = batch.lattices[graph_idx].to(device=device, dtype=dtype)
+            volumns.append(torch.dot(lattice[0], torch.cross(lattice[1], lattice[2])))
+            
+
+            
+            
 
             pos_local = positions_all.index_select(0, indices)
-            atom_num_local = atom_numbers_all.index_select(0, indices)
+            
 
-            simple_graphs.append(SimpleNamespace(atomic_number=atom_num_local))
-            atomic_numbers.append(atom_num_local)
+            
+            # atomic_numbers.append(atom_num_local)
             atom_owners.append(
                 torch.full(
                     (indices.numel(),),
@@ -333,103 +356,64 @@ class CHGNet(nn.Module):
                 )
             )
 
-            edge_index = radius_graph(
-                pos_local,
-                r=self.atom_graph_cutoff,
-                loop=False,
-                max_num_neighbors=1000,
-            ).to(device=device)
+            struct = batch.structures[graph_idx]
+            graph_components = build_graph_components(
+                structure=struct,
+                device=device,
+                atom_graph_cutoff=self.atom_graph_cutoff,
+                bond_graph_cutoff=self.bond_graph_cutoff,
+                dtype=dtype,
+            )
+            atom_graph_local = graph_components.atom_graph_local
+            directed2undirected_local = graph_components.directed2undirected_local
+            undirected2directed_local = graph_components.undirected2directed_local
+            image_local = graph_components.image_local
+            line_graph_local = graph_components.line_graph_local
 
-            if edge_index.numel() == 0:
+            if atom_graph_local.numel() > 0:
+                lattice_local = batch.lattices[graph_idx].to(device=device, dtype=dtype)
+                centers_local = atom_graph_local[:, 0]
+                neighbors_local = atom_graph_local[:, 1]
+
+                bond_basis_ag_local, bond_basis_bg_local, bond_vectors_local = (
+                    self.bond_basis_expansion(
+                        center=pos_local.index_select(0, centers_local),
+                        neighbor=pos_local.index_select(0, neighbors_local),
+                        undirected2directed=undirected2directed_local,
+                        image=image_local,
+                        lattice=lattice_local,
+                    )
+                )
+
+                if line_graph_local.shape[0] > 0:
+                    angle_basis_local = self.angle_basis_expansion(
+                        bond_vectors_local.index_select(0, line_graph_local[:, 2]),
+                        bond_vectors_local.index_select(0, line_graph_local[:, 4]),
+                    )
+                else:
+                    angle_basis_local = torch.empty(
+                        (0, self.num_angular), dtype=dtype, device=device
+                    )
+            else:
                 atom_graph_local = torch.empty((0, 2), dtype=torch.long, device=device)
-                directed2undirected_local = torch.empty((0,), dtype=torch.long, device=device)
-                undirected2directed_local = torch.empty((0,), dtype=torch.long, device=device)
+                directed2undirected_local = torch.empty(
+                    (0,), dtype=torch.long, device=device
+                )
+                undirected2directed_local = torch.empty(
+                    (0,), dtype=torch.long, device=device
+                )
                 bond_basis_ag_local = torch.empty(
                     (0, self.num_radial), dtype=dtype, device=device
                 )
                 bond_basis_bg_local = torch.empty(
                     (0, self.num_radial), dtype=dtype, device=device
                 )
-                bond_vectors_local = torch.empty((0, 3), dtype=dtype, device=device)
                 line_graph_local = torch.empty((0, 5), dtype=torch.long, device=device)
                 angle_basis_local = torch.empty(
                     (0, self.num_angular), dtype=dtype, device=device
                 )
-            else:
-                centers = edge_index[1]
-                neighbors = edge_index[0]
-                atom_graph_local = torch.stack([centers, neighbors], dim=1)
 
-                pair_to_undirected: dict[tuple[int, int], int] = {}
-                directed2undirected_local_list: list[int] = []
-                undirected2directed_local_list: list[int] = []
-
-                for dir_idx, (center_i, neighbor_j) in enumerate(atom_graph_local.tolist()):
-                    key = (center_i, neighbor_j) if center_i <= neighbor_j else (neighbor_j, center_i)
-                    if key not in pair_to_undirected:
-                        pair_to_undirected[key] = len(pair_to_undirected)
-                        undirected2directed_local_list.append(dir_idx)
-                    directed2undirected_local_list.append(pair_to_undirected[key])
-
-                directed2undirected_local = torch.tensor(
-                    directed2undirected_local_list, dtype=torch.long, device=device
-                )
-                undirected2directed_local = torch.tensor(
-                    undirected2directed_local_list, dtype=torch.long, device=device
-                )
-
-                bond_basis_ag_local, bond_basis_bg_local, bond_vectors_local = (
-                    self.bond_basis_expansion(
-                        center=pos_local.index_select(0, centers),
-                        neighbor=pos_local.index_select(0, neighbors),
-                        undirected2directed=undirected2directed_local,
-                        image=torch.zeros(
-                            (atom_graph_local.shape[0], 3),
-                            dtype=dtype,
-                            device=device,
-                        ),
-                        lattice=identity_lattice,
-                    )
-                )
-
-                bond_lengths = torch.norm(
-                    pos_local.index_select(0, centers)
-                    - pos_local.index_select(0, neighbors),
-                    dim=1,
-                )
-                center_to_dirs: dict[int, list[int]] = {}
-                for dir_idx, center in enumerate(centers.tolist()):
-                    center_to_dirs.setdefault(center, []).append(dir_idx)
-
-                line_entries: list[list[int]] = []
-                for center, dir_indices in center_to_dirs.items():
-                    for dir_idx in dir_indices:
-                        if bond_lengths[dir_idx] > self.bond_graph_cutoff:
-                            continue
-                        undirected_left = directed2undirected_local_list[dir_idx]
-                        for other_dir in dir_indices:
-                            if other_dir == dir_idx:
-                                continue
-                            if bond_lengths[other_dir] > self.bond_graph_cutoff:
-                                continue
-                            undirected_right = directed2undirected_local_list[other_dir]
-                            line_entries.append(
-                                [center, undirected_left, dir_idx, undirected_right, other_dir]
-                            )
-
-                if line_entries:
-                    line_graph_local = torch.tensor(
-                        line_entries, dtype=torch.long, device=device
-                    )
-                    angle_basis_local = self.angle_basis_expansion(
-                        bond_vectors_local.index_select(0, line_graph_local[:, 2]),
-                        bond_vectors_local.index_select(0, line_graph_local[:, 4]),
-                    )
-                else:
-                    line_graph_local = torch.empty((0, 5), dtype=torch.long, device=device)
-                    angle_basis_local = torch.empty(
-                        (0, self.num_angular), dtype=dtype, device=device
-                    )
+            directed2undirected_local = directed2undirected_local + undirected_offset
 
             directed_count = atom_graph_local.shape[0]
             undirected_count = bond_basis_ag_local.shape[0]
@@ -437,7 +421,7 @@ class CHGNet(nn.Module):
             if directed_count > 0:
                 atom_graphs.append(atom_graph_local + atom_offset)
                 directed2undirected.append(
-                    directed2undirected_local + undirected_offset
+                    directed2undirected_local
                 )
 
             if undirected_count > 0:

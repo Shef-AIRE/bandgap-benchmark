@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import os
 from copy import deepcopy
-
-import torch
 
 from realmat_bag.pipeline.trainer import MaterialsTrainer
 from .alignn import ALIGNN
@@ -69,7 +66,6 @@ def get_config(cfg):
             "regress_forces": regress_forces,
             "cutoff": alignn_cfg.CUTOFF,
             "readout": alignn_cfg.READOUT,
-            "max_neighbors": alignn_cfg.MAX_NEIGHBORS,
             "encoding": alignn_cfg.ENCODING,
             "max_num_elements": alignn_cfg.MAX_NUM_ELEMENTS,
         },

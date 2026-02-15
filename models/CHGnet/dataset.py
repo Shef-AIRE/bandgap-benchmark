@@ -13,15 +13,16 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SubsetRandomSampler
 
-from chgnet import utils
-from chgnet.graph import CrystalGraph, CrystalGraphConverter
+from .graph import CrystalGraph, CrystalGraphConverter
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from typing import Literal
+
     from typing_extensions import Self
 
-    from chgnet import TrainTask
+    TrainTask = Literal["ef", "efs", "efm", "efsm"]
 
 warnings.filterwarnings("ignore")
 TORCH_DTYPE = torch.float32
@@ -116,6 +117,13 @@ class StructureData(Dataset):
             shuffle (bool): whether to shuffle the sequence of dataset
                 Default = True
         """
+        try:
+            from . import utils
+        except ImportError as exc:
+            raise ImportError(
+                "models/CHGnet/utils.py is required for StructureData.from_vasp()."
+            ) from exc
+
         result_dict = utils.parse_vasp_dir(
             base_dir=file_root,
             check_electronic_convergence=check_electronic_convergence,

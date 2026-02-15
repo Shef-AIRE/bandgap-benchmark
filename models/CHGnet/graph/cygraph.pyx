@@ -11,7 +11,7 @@
 import numpy as np
 cimport numpy as np
 
-import chgnet.graph.graph
+from . import graph as chg_graph
 
 from libc.stdlib cimport free
 
@@ -77,9 +77,9 @@ def make_graph(
     cdef ReturnElems2* returned
     returned = <ReturnElems2*> create_graph(<np.int64_t*> &center_index[0], n_e, <np.int64_t*> &neighbor_index[0], <np.int64_t*> &image[0][0], <np.float64_t*> &distance[0], num_atoms)
 
-    chg_DirectedEdge = chgnet.graph.graph.DirectedEdge
-    chg_Node = chgnet.graph.graph.Node
-    chg_UndirectedEdge = chgnet.graph.graph.UndirectedEdge
+    chg_DirectedEdge = chg_graph.DirectedEdge
+    chg_Node = chg_graph.Node
+    chg_UndirectedEdge = chg_graph.UndirectedEdge
 
 
     image_np = np.asarray(image)

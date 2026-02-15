@@ -10,8 +10,7 @@ from dgl.nn import AvgPooling
 from torch import nn
 from torch.nn import functional as F
 
-from .converter import CrystalGraphConverter, TORCH_DTYPE
-from .pyg2dgl import compute_bond_cosines
+from models.common.graph_builder import build_dgl_graphs_from_batch
 
 class RBFExpansion(nn.Module):
     """Expand interatomic distances with radial basis functions."""
@@ -212,7 +211,6 @@ class ALIGNN(nn.Module):
         regress_forces=False,
         cutoff=6.0,
         readout="mean",
-        max_neighbors=50,
         encoding="prop",
         max_num_elements=94,
         ):
@@ -221,16 +219,9 @@ class ALIGNN(nn.Module):
         self.num_targets = num_targets
         self.cutoff = cutoff
         self.regress_forces = regress_forces
-        self.max_neighbors = max_neighbors
         self.readout = readout
         self.encoding = encoding
         self.max_num_elements = max_num_elements
-        self.graph_converter = CrystalGraphConverter(
-            atom_graph_cutoff=cutoff,
-            bond_graph_cutoff=cutoff,
-            algorithm="legacy",
-            on_isolated_atoms="ignore",
-        )
 
         if encoding == "prop":
             self.atom_prop_embed = MLPLayer(atom_input_dim, atom_embedding_size)
@@ -303,9 +294,6 @@ class ALIGNN(nn.Module):
         y: bond features (g.edata and lg.ndata)
         z: angle features (lg.edata)
         """
-        ##############################
-        # CHANGED
-        ##############################
 
         if len(self.alignn_layers) > 0:
             g, lg = g
@@ -362,102 +350,10 @@ class ALIGNN(nn.Module):
         return out
 
     def build_dgl_graphs(self, batch):
-        structures = getattr(batch, "structures", None)
-        if structures is None:
-            raise TypeError(
-                "ALIGNN expects BatchData to include `structures` for graph conversion."
-            )
-
         device = next(self.parameters()).device
-        graphs = []
-        line_graphs = []
-
-        for idx, structure in enumerate(structures):
-            crystal_graph = self.graph_converter(structure)
-            g_local, lg_local = self._graph_from_crystal_graph(
-                structure=structure,
-                crystal_graph=crystal_graph,
-                batch=batch,
-                index=idx,
-                device=device,
-            )
-            graphs.append(g_local)
-            line_graphs.append(lg_local)
-
-        if not graphs:
-            # handle empty batch
-            empty = dgl.graph(
-                (torch.tensor([], dtype=torch.long, device=device),) * 2,
-                num_nodes=0,
-                device=device,
-            )
-            empty_lg = dgl.graph(
-                (torch.tensor([], dtype=torch.long, device=device),) * 2,
-                num_nodes=0,
-                device=device,
-            )
-            empty_lg.edata["h"] = torch.zeros(0, device=device)
-            return empty, empty_lg
-
-        return dgl.batch(graphs).to(device), dgl.batch(line_graphs).to(device)
-
-    def _graph_from_crystal_graph(
-        self, structure, crystal_graph, batch, index, device
-    ):
-        atom_graph = crystal_graph.atom_graph.to(device=device, dtype=torch.long)
-        num_atoms = crystal_graph.atomic_number.numel()
-
-        if atom_graph.numel() == 0:
-            src = dst = torch.zeros(0, dtype=torch.long, device=device)
-        else:
-            src = atom_graph[:, 0].long()
-            dst = atom_graph[:, 1].long()
-
-        g_local = dgl.graph((src, dst), num_nodes=int(num_atoms), device=device)
-
-        atom_indices = batch.crystal_atom_idx[index]
-        if self.encoding == "prop":
-            src_tensor = batch.atom_fea
-            if src_tensor.device != atom_indices.device:
-                atom_indices = atom_indices.to(src_tensor.device)
-            atom_features = src_tensor.index_select(0, atom_indices).to(device)
-            g_local.ndata["atom_features"] = atom_features
-        else:
-            src_tensor = batch.atom_num
-            if src_tensor.device != atom_indices.device:
-                atom_indices = atom_indices.to(src_tensor.device)
-            atom_numbers = src_tensor.index_select(0, atom_indices).to(device)
-            g_local.ndata["atom_numbers"] = atom_numbers
-
-        coords = torch.as_tensor(
-            structure.cart_coords, dtype=TORCH_DTYPE, device=device
+        return build_dgl_graphs_from_batch(
+            batch=batch, device=device, cutoff=self.cutoff, encoding=self.encoding
         )
-        if atom_graph.numel() == 0:
-            displacement = torch.zeros((0, 3), dtype=TORCH_DTYPE, device=device)
-            distances = torch.zeros(0, dtype=TORCH_DTYPE, device=device)
-        else:
-            displacement = coords[dst] - coords[src]
-            distances = torch.linalg.norm(displacement, dim=-1)
-
-        g_local.edata["r"] = displacement
-        g_local.edata["distances"] = distances
-
-        if g_local.num_edges() == 0:
-            lg_local = dgl.graph(
-                (torch.tensor([], dtype=torch.long, device=device),) * 2,
-                num_nodes=0,
-                device=device,
-            )
-            lg_local.edata["h"] = torch.zeros(0, dtype=TORCH_DTYPE, device=device)
-            return g_local, lg_local
-
-        lg_local = g_local.line_graph(shared=True)
-        if lg_local.num_edges() > 0:
-            lg_local.apply_edges(compute_bond_cosines)
-        else:
-            lg_local.edata["h"] = torch.zeros(0, dtype=TORCH_DTYPE, device=device)
-
-        return g_local, lg_local
 
     def forward(self, batch, return_features: bool = False):
         g_tuple = self.build_dgl_graphs(batch)

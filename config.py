@@ -112,7 +112,6 @@ _C.ALIGNN.ATOM_EMBEDDING_SIZE = 256
 _C.ALIGNN.CUTOFF = 5.0
 _C.ALIGNN.DROPOUT = 0.0
 _C.ALIGNN.READOUT = "mean"  # Choices: ['mean', 'sum', 'max']
-_C.ALIGNN.MAX_NEIGHBORS = 1000
 _C.ALIGNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
 _C.ALIGNN.ACTIVATION = "silu"
 _C.ALIGNN.RBF_TRAINABLE = False

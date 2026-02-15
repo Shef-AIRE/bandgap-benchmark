@@ -18,10 +18,12 @@ if TYPE_CHECKING:
     from pymatgen.core import Structure
     from typing_extensions import Self
 
-try:
-    from .cygraph import make_graph
-except (ImportError, AttributeError):
-    make_graph = None
+# NOTE: Fast Cython graph path is intentionally disabled for now.
+# try:
+#     from .cygraph import make_graph
+# except (ImportError, AttributeError):
+#     make_graph = None
+make_graph = None
 
 TORCH_DTYPE = torch.float32
 
@@ -72,15 +74,11 @@ class CrystalGraphConverter(nn.Module):
         self.create_graph = self._create_graph_legacy
         self.algorithm = "legacy"
         if algorithm == "fast":
-            if make_graph is not None:
-                self.create_graph = self._create_graph_fast
-                self.algorithm = "fast"
-            else:
-                warnings.warn(
-                    "`fast` algorithm is not available, using `legacy`",
-                    UserWarning,
-                    stacklevel=1,
-                )
+            warnings.warn(
+                "`fast` algorithm is temporarily disabled, using `legacy`",
+                UserWarning,
+                stacklevel=1,
+            )
         elif algorithm != "legacy":
             warnings.warn(
                 f"Unknown {algorithm=}, using `legacy`",

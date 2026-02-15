@@ -9,7 +9,7 @@ def collate_pool_leftnet(dataset_list):
     Collate a list of data and return a batch for predicting crystal
     properties, handling variable sizes.
     """
-    batch_atom_fea, batch_nbr_fea, batch_nbr_fea_idx, batch_positions, batch_atom_num = [], [], [], [], []
+    batch_atom_fea, batch_nbr_fea, batch_nbr_fea_idx, batch_positions, batch_atom_num, batch_lattices = [], [], [], [], [], []
     crystal_atom_idx, batch_target = [], []
     batch_cif_ids = []
     batch_atom_indices = []
@@ -25,6 +25,9 @@ def collate_pool_leftnet(dataset_list):
         batch_nbr_fea_idx.append(data_item.nbr_fea_idx + base_idx)
         batch_positions.append(data_item.positions)
         batch_atom_num.append(data_item.atom_num)
+
+        lat = torch.tensor(data_item.structure.lattice.matrix, dtype=data_item.positions.dtype)
+        batch_lattices.append(lat.unsqueeze(0))  # (1,3,3)
 
         # Create index mappings
         crystal_atom_idx.append(torch.arange(n_i) + base_idx)
@@ -43,6 +46,7 @@ def collate_pool_leftnet(dataset_list):
         nbr_fea_idx=torch.cat(batch_nbr_fea_idx, dim=0),  # Concatenate neighbor indices
         positions=torch.cat(batch_positions, dim=0),  # Concatenate positions
         atom_num=torch.cat(batch_atom_num, dim=0),  # Concatenate atom numbers
+        lattices=torch.cat(batch_lattices, dim=0),  # Concatenate lattices
         crystal_atom_idx=crystal_atom_idx,  # List of tensors for crystal-to-atom mapping
         target=torch.stack(batch_target, dim=0),  # Stack targets (assuming they are uniform in shape)
         cif_ids=batch_cif_ids,  # List of cif_ids
@@ -59,6 +63,7 @@ class BatchData:
         nbr_fea_idx,
         positions,
         atom_num,
+        lattices,
         crystal_atom_idx,
         target,
         cif_ids,
@@ -70,6 +75,7 @@ class BatchData:
         self.nbr_fea_idx = nbr_fea_idx
         self.positions = positions
         self.atom_num = atom_num
+        self.lattices = lattices
         self.crystal_atom_idx = crystal_atom_idx
         self.target = target
         self.cif_ids = cif_ids
