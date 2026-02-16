@@ -3,9 +3,6 @@ DATASET:
   VAL: data/splits_feature_ood/test_data.json
 MODEL:
   NAME: leftnet
-  PRETRAINED_MODEL_PATH: ''
-  INIT_FILE: cif_file/atom_init.json
-  CIF_FOLDER: cif_file
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
@@ -13,7 +10,6 @@ SOLVER:
   NUM_RUNS: 2
 LEFTNET:
   ENCODING: z
-  LAYER_FREEZE: none
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: feature_ood/leftnet_z_no_pretrain

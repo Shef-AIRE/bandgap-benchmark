@@ -3,14 +3,13 @@ DATASET:
   VAL: data/splits_feature_ood/test_data.json
 MODEL:
   NAME: chgnet
-  PRETRAINED_MODEL_PATH: 'saved_models/chgnet_cutoff5/best.ckpt'
-  INIT_FILE: cif_file/atom_init.json
-  CIF_FOLDER: cif_file
+  PRETRAINED_MODEL_PATH: saved_models/chgnet_cutoff5/best.ckpt
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 100
-  NUM_RUNS: 1
+CHGNET:
+  ENCODING: z
 LOGGING:
   LOG_DIR: saved_models
   LOG_DIR_NAME: feature_ood/chgnet
