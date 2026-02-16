@@ -46,8 +46,8 @@ _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 _C.MODEL = CN()
 _C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'alignn', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
 _C.MODEL.PRETRAINED_MODEL_PATH = ""
-_C.MODEL.CIF_FOLDER = "./cifs"
-_C.MODEL.INIT_FILE = "./init.json"
+_C.MODEL.CIF_FOLDER = "cif_file"
+_C.MODEL.INIT_FILE = "cif_file/atom_init.json"
 _C.MODEL.MAX_NBRS = 12
 _C.MODEL.RADIUS = 7.0
 _C.MODEL.HYPERPARAMS = CN(new_allowed=True)
