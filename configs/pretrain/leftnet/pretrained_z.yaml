@@ -10,7 +10,7 @@ MODEL:
 
 
 SOLVER:
-  LR: 0.01
+  LR: 0.001
   EPOCHS: 200
   NUM_RUNS: 1
 
