@@ -292,14 +292,11 @@ def main():
                 model = get_model(cfg)
                 wandb_logger, log_dir = setup_logger(cfg, fold_label)
                 trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, fold_label)
-
-                ckpt_path = cfg.MODEL.PRETRAINED_MODEL_PATH if os.path.exists(cfg.MODEL.PRETRAINED_MODEL_PATH) else None
-
+                model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
                 trainer.fit(
                     model,
                     train_dataloaders=train_loader,
                     val_dataloaders=val_loader,
-                    ckpt_path=ckpt_path
                 )
 
                 best_model_path = checkpoint_callback.best_model_path
@@ -334,15 +331,11 @@ def main():
             model = get_model(cfg)
             wandb_logger, log_dir = setup_logger(cfg, "pretrain")
             trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, "pretrain")
-
-            # Resume from checkpoint if exists
-            ckpt_path = cfg.MODEL.PRETRAINED_MODEL_PATH if os.path.exists(cfg.MODEL.PRETRAINED_MODEL_PATH) else None
-
+            model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
             trainer.fit(
                 model,
                 train_dataloaders=train_loader,
                 val_dataloaders=val_loader,
-                ckpt_path=ckpt_path
             )
 
             # Evaluate best model
