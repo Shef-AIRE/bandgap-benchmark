@@ -4,12 +4,12 @@ DATASET:
 
 MODEL:
   NAME: "chgnet"
-  PRETRAINED_MODEL_PATH: ""
+  PRETRAINED_MODEL_PATH: "saved_models/pretrain/chgnet_prop/pretrain-last-epoch=89.ckpt"
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 SOLVER:
-  LR: 0.01
+  LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 200
 
