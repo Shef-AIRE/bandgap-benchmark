@@ -2,7 +2,6 @@ SOLVER:
   SEED: 42
   EPOCHS: 200
   LR: 0.01
-  NUM_RUNS: 1
   NUM_FOLDS: 10
   RANDOMIZE: True
   TASK: "regression"  # Choices: ['regression', 'classification']

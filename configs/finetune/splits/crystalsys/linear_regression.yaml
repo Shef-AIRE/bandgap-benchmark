@@ -18,7 +18,6 @@ SOLVER:
   SEED: 42
   NUM_FOLDS: 10
   EPOCHS: 1
-  NUM_RUNS: 1
 
 LOGGING:
   LOG_DIR: "saved_models"

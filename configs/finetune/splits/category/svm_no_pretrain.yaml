@@ -26,7 +26,6 @@ MODEL:
     - rbf
 SOLVER:
   NUM_FOLDS: 10
-  NUM_RUNS: 1
   EPOCHS: 100
 LOGGING:
   LOG_DIR: saved_models
