@@ -5,13 +5,9 @@ SOLVER:
   NUM_FOLDS: 10
   RANDOMIZE: true
   TASK: regression
-  DISABLE_CUDA: false
   WORKERS: 4
-  START_EPOCH: 0
   MOMENTUM: 0.9
   WEIGHT_DECAY: 0.0
-  PRINT_FREQ: 10
-  RESUME: ''
   OPTIM: SGD
 MODEL:
   NAME: cartnet
