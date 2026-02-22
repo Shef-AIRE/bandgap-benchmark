@@ -5,17 +5,20 @@ DATASET:
   SPLIT_GLOB: "data/split_json/crystalsys_split/*.train.json"
 
 MODEL:
-  NAME: "alignn"
-  PRETRAINED_MODEL_PATH: "saved_models/pretrain/alignn_z/best.ckpt"
+  NAME: "svm"
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
+  HYPERPARAMS:
+    SEARCH: grid
+    C: [1, 10, 100]
+    gamma: [0.01, 0.1, 1]
+    epsilon: [0.01, 0.1, 0.5]
+    kernel: ['rbf']
 
 SOLVER:
-  LR: 0.001
   NUM_FOLDS: 10
-  EPOCHS: 100
-
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "crystalsys/alignn_z"
+  LOG_DIR_NAME: "split_by_matfold/crystalsys/svm"
