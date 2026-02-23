@@ -31,4 +31,4 @@ DATASET:
   TRAIN: ''
   VAL: ''
   PREDEFINED_SPLIT: true
-  SPLIT_GLOB: data/split_by_category/*.train.json
+  SPLIT_GLOB: data/domain_split/lomo_split/*.train.json

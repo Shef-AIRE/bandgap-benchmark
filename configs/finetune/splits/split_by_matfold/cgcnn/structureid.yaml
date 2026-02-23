@@ -2,7 +2,7 @@ DATASET:
   TRAIN: ""
   VAL: ""
   PREDEFINED_SPLIT: True
-  SPLIT_GLOB: "data/split_json/structureid_split/*.train.json"
+  SPLIT_GLOB: "data/domain_split/structureid_split/*.train.json"
 
 MODEL:
   NAME: "cgcnn"

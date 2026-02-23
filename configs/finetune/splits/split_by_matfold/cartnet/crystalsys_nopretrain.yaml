@@ -2,7 +2,7 @@ DATASET:
   TRAIN: ""
   VAL: ""
   PREDEFINED_SPLIT: True
-  SPLIT_GLOB: "data/split_json/crystalsys_split/*.train.json"
+  SPLIT_GLOB: "data/domain_split/crystalsys_split/*.train.json"
 
 SOLVER:
   SEED: 42

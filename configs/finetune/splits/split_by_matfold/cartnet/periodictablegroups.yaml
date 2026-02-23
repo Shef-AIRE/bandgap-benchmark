@@ -2,7 +2,7 @@ DATASET:
   TRAIN: ""
   VAL: ""
   PREDEFINED_SPLIT: True
-  SPLIT_GLOB: "data/split_json/periodictablegroups_split/*.train.json"
+  SPLIT_GLOB: "data/domain_split/periodictablegroups_split/*.train.json"
 
 SOLVER:
   SEED: 42
