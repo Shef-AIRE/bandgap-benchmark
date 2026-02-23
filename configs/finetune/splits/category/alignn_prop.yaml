@@ -8,6 +8,8 @@ MODEL:
   PRETRAINED_MODEL_PATH: saved_models/pretrain/alignn_prop/best.ckpt
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
+ALIGNN:
+  ENCODING: prop
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10

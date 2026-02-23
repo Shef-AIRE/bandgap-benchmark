@@ -20,6 +20,7 @@ MODEL:
   RADIUS: 8.0
 
 CARTNET:
+  ENCODING: z
   DIM_IN: 256  # Add appropriate default value
   DIM_RBF: 64  # Add appropriate default value
   NUM_LAYERS: 4  # Add appropriate default value
