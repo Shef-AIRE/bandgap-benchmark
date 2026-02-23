@@ -121,7 +121,7 @@ class StructureData(Dataset):
             from . import utils
         except ImportError as exc:
             raise ImportError(
-                "models/CHGnet/utils.py is required for StructureData.from_vasp()."
+                "realmat_bag/pipeline/models/CHGnet/utils.py is required for StructureData.from_vasp()."
             ) from exc
 
         result_dict = utils.parse_vasp_dir(

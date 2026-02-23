@@ -5,7 +5,7 @@ from typing import Any, Dict
 import torch
 from torch import nn
 
-from models.CHGnet.model.CHGNet import CHGNet
+from realmat_bag.pipeline.models.CHGnet.model.CHGNet import CHGNet
 from realmat_bag.pipeline.trainer import MaterialsTrainer
 
 

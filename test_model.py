@@ -8,14 +8,14 @@ import numpy as np
 from torch.utils.data import DataLoader
 import random
 
-from models.cgcnn.model_cgcnn import get_cgcnn_model
+from realmat_bag.pipeline.models.cgcnn.model_cgcnn import get_cgcnn_model
 from realmat_bag.loaddata.cifdata import CIFData
 from realmat_bag.loaddata.collate import collate_pool_leftnet
-from models.leftnet.model_leftnet import get_leftnet_model
-from models.CHGnet.model_chgnet import get_chgnet_model
+from realmat_bag.pipeline.models.leftnet.model_leftnet import get_leftnet_model
+from realmat_bag.pipeline.models.CHGnet.model_chgnet import get_chgnet_model
 from config import get_cfg_defaults
-from models.cartnet.model_cartnet import get_cartnet_model  # Import the missing function
-from models.alignn.model_alignn import get_alignn_model
+from realmat_bag.pipeline.models.cartnet.model_cartnet import get_cartnet_model  # Import the missing function
+from realmat_bag.pipeline.models.alignn.model_alignn import get_alignn_model
 
 
 

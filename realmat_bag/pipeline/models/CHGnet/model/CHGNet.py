@@ -7,7 +7,7 @@ from typing import Literal
 import torch
 from torch import Tensor, device, nn
 
-from models.common.graph_builder import build_graph_components
+from realmat_bag.pipeline.models.common.graph_builder import build_graph_components
 from .composition_model import AtomRef
 from .encoders import AngleEncoder, AtomEmbedding, BondEncoder
 from .functions import GatedMLP, MLP, find_activation, find_normalization

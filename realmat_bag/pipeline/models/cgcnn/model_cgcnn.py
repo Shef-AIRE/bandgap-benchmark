@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import torch
 
-from models.cgcnn.CGCNN import CrystalGraphConvNet
+from realmat_bag.pipeline.models.cgcnn.CGCNN import CrystalGraphConvNet
 
 from realmat_bag.pipeline.trainer import MaterialsTrainer
 

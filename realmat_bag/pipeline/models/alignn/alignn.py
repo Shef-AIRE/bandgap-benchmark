@@ -12,7 +12,7 @@ from torch.nn import functional as F
 
 from .converter import CrystalGraphConverter, TORCH_DTYPE
 from .pyg2dgl import compute_bond_cosines
-# from models.common.graph_builder import build_dgl_graphs_from_batch as build_dgl_graphs_from_batch_common
+# from realmat_bag.pipeline.models.common.graph_builder import build_dgl_graphs_from_batch as build_dgl_graphs_from_batch_common
 
 class RBFExpansion(nn.Module):
     """Expand interatomic distances with radial basis functions."""

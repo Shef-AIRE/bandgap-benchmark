@@ -8,14 +8,14 @@ import numpy as np
 import torch
 from dgl import DGLGraph
 
-from models.CHGnet.graph.graph import Graph as BaseGraph
-from models.CHGnet.graph.graph import Node as BaseNode
-from models.alignn.pyg2dgl import compute_bond_cosines
+from realmat_bag.pipeline.models.CHGnet.graph.graph import Graph as BaseGraph
+from realmat_bag.pipeline.models.CHGnet.graph.graph import Node as BaseNode
+from realmat_bag.pipeline.models.alignn.pyg2dgl import compute_bond_cosines
 
 # Temporarily disable cython fast-path to keep graph construction behavior
 # fully on the Python BaseGraph path during debugging/refactor.
 # try:
-#     from models.CHGnet.graph.cygraph import make_graph as fast_make_graph
+#     from realmat_bag.pipeline.models.CHGnet.graph.cygraph import make_graph as fast_make_graph
 # except (ImportError, AttributeError):
 #     fast_make_graph = None
 fast_make_graph = None

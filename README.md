@@ -1,18 +1,20 @@
 ### bandgap-benchmark
 Code for "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data"
 
-This repository contains the PyTorch Lightning implementation of the benchmark that described in our paper "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data". We compiled a new multimodal, multi-idelity dataset from the Materials Project and BandgapDatabase1, consisting of 60,218 low-fidelity computational band gaps and 1,183 high-fidelity experimental band gaps. We evaluated seven ML models, including three traditioanl methods (linear regression, random forest regression and support vector regression) and four GNN (CGCNN, CartNet, LEFTNet-Z and LEFTNet-Prop). 
+This repository contains the PyTorch Lightning implementation of the benchmark that described in our paper "Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data". We compiled a new multimodal, multi-idelity dataset from the Materials Project and BandgapDatabase1, consisting of 60,218 low-fidelity computational band gaps and 1,705 high-fidelity experimental band gaps. We evaluated seven ML models, including three traditioanl methods (linear regression, random forest regression and support vector regression) and four GNN (CGCNN, CartNet, LEFTNet-Z and LEFTNet-Prop). 
 
 ### Repository Structure
 `cif_file.zip` - Contains `.cif` files and the atomic encoding file used in the benchmark.
 
 `data/` - Directory containing MPIDs and corresponding band gap values:
 * `pretrain_data.json` - 60,218 PBE band gap values.
-* `fine_tune/` - Experimental band gap values.
+* `fine_tune/train_data.json` - 1,534 experimental band gap values.
+* `fine_tune/test_data.json` - 171 experimental band gap values.
+* `fine_tune/` total - 1,705 experimental band gap values.
 * `data_by_type/` - Data used for "leave-one-material-out" splits, categorized by material type.
 `configs/` - Configuration files for training models.
 
-`models/` - Implementations of baseline models.
+`realmat_bag/pipeline/models/` - Implementations of baseline models.
 
 `loaddata/` - Data preparation, splitting, and processing.
 
@@ -41,3 +43,27 @@ After training, predictions can be generated using:
 python test_model.py --cfg configs/PATH_TO_YOUR_CONFIG.yaml --checkpoint saved_models/PATH_TO_YOUR_MODEL.ckpt --cif_folder cif_file --test_data data/fine_tune/test_data.json
 ```
 
+### Download CIF
+
+Downloading CIF data requires a Materials Project API key: https://next-gen.materialsproject.org/api
+
+Option 1: download explicitly before training
+
+```bash
+# Optional: avoid entering key every time
+export MP_API_KEY=YOUR_MP_API_KEY
+
+# Download CIFs for data/pretrain_data.json
+python3 download_cif_by_mpid.py --stage pretrain
+
+# Download CIFs for data/fine_tune/train_data.json and data/fine_tune/test_data.json
+python3 download_cif_by_mpid.py --stage finetune
+```
+
+Option 2: download automatically during training
+
+```bash
+python main.py --cfg configs/PATH_TO_YOUR_CONFIG.yaml
+```
+
+When running any config, missing CIF files will be downloaded automatically.

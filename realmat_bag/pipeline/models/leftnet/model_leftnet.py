@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 from realmat_bag.pipeline.trainer import MaterialsTrainer
-from models.leftnet.leftnet import LEFTNet
+from realmat_bag.pipeline.models.leftnet.leftnet import LEFTNet
 
 
 def get_config(cfg):
