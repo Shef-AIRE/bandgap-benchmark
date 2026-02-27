@@ -127,7 +127,7 @@ def _convert2dgl(geometric_data, dist_vect_r, dist):
     lg.apply_edges(compute_bond_cosines)
     return g, lg
 
-def convert2dgl(geometric_batch_data, distance_vec, distances):
+def convert_pyg_batch_to_dgl(geometric_batch_data, distance_vec, distances):
     device = geometric_batch_data.pos.device
     g_list = []
     lg_list = []
@@ -143,4 +143,8 @@ def convert2dgl(geometric_batch_data, distance_vec, distances):
         lg_list.append(lg)
         
     return (dgl.batch(g_list).to(device), dgl.batch(lg_list).to(device))
+
+
+# Backward-compatible alias.
+convert2dgl = convert_pyg_batch_to_dgl
  

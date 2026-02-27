@@ -1,10 +1,7 @@
-import numpy as np
 import torch
-from torch.utils.data import default_collate
-from typing import List
 
 
-def collate_pool_leftnet(dataset_list):
+def collate_crystal_batch(dataset_list):
     """
     Collate a list of data and return a batch for predicting crystal
     properties, handling variable sizes.
@@ -55,6 +52,10 @@ def collate_pool_leftnet(dataset_list):
     )
 
 
+# Backward-compatible alias.
+collate_pool_leftnet = collate_crystal_batch
+
+
 class BatchData:
     def __init__(
         self,
@@ -82,22 +83,3 @@ class BatchData:
         self.batch_idx = batch_idx
         self.batch_size = len(cif_ids)
         self.structures = structures
-
-
-def collate_chgnet(dataset_list):
-    """
-    Collate function for CHGNet that keeps the full Structure objects so they can
-    be converted to CrystalGraphs inside the model.
-    """
-    structures: List = [item.structure for item in dataset_list]
-    targets = torch.stack([item.target for item in dataset_list], dim=0)
-    cif_ids = [item.cif_id for item in dataset_list]
-    return CHGNetBatch(structures=structures, target=targets, cif_ids=cif_ids)
-
-
-class CHGNetBatch:
-    def __init__(self, structures, target, cif_ids):
-        self.structures = structures
-        self.target = target
-        self.cif_ids = cif_ids
-        self.batch_size = len(structures)

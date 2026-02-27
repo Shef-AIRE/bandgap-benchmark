@@ -10,7 +10,7 @@ import random
 
 from realmat_bag.pipeline.models.cgcnn.model_cgcnn import get_cgcnn_model
 from realmat_bag.loaddata.cifdata import CIFData
-from realmat_bag.loaddata.collate import collate_pool_leftnet
+from realmat_bag.loaddata.collate import collate_crystal_batch
 from realmat_bag.pipeline.models.leftnet.model_leftnet import get_leftnet_model
 from realmat_bag.pipeline.models.CHGnet.model_chgnet import get_chgnet_model
 from config import get_cfg_defaults
@@ -76,7 +76,7 @@ def load_model_and_data(cfg, checkpoint_path, test_data_path, cif_folder):
     # Create test DataLoader
     test_loader = DataLoader(
         test_dataset,
-        collate_fn=collate_pool_leftnet,
+        collate_fn=collate_crystal_batch,
         batch_size=cfg.SOLVER.BATCH_SIZE,
         shuffle=False,
         num_workers=cfg.SOLVER.WORKERS,

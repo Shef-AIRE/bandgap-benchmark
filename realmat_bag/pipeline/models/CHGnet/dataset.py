@@ -863,30 +863,3 @@ def get_train_val_test_loader(
         return train_loader, val_loader, test_loader
     return train_loader, val_loader
 
-
-def get_loader(
-    dataset, *, batch_size: int = 64, num_workers: int = 0, pin_memory: bool = True
-) -> DataLoader:
-    """Get a dataloader from a dataset.
-
-    Args:
-        dataset (Dataset): The dataset to partition.
-        batch_size (int): The batch size for the data loaders
-            Default = 64
-        num_workers (int): The number of worker processes for loading the data
-            see torch Dataloader documentation for more info
-            Default = 0
-        pin_memory (bool): Whether to pin the memory of the data loaders
-            Default: True
-
-    Returns:
-        data_loader
-    """
-    return DataLoader(
-        dataset,
-        batch_size=batch_size,
-        collate_fn=collate_graphs,
-        shuffle=True,
-        num_workers=num_workers,
-        pin_memory=pin_memory,
-    )

@@ -16,7 +16,7 @@ import random
 from pathlib import Path
 
 from realmat_bag.loaddata.cifdata import CIFData
-from realmat_bag.loaddata.collate import collate_pool_leftnet
+from realmat_bag.loaddata.collate import collate_crystal_batch
 from realmat_bag.pipeline.models.cgcnn.model_cgcnn import get_cgcnn_model
 from realmat_bag.pipeline.models.leftnet.model_leftnet import get_leftnet_model
 from realmat_bag.pipeline.models.cartnet.model_cartnet import get_cartnet_model
@@ -53,7 +53,7 @@ def load_json_as_dataframe(path):
     return df
 
 
-def load_data(cfg):
+def load_train_val_dataframes(cfg):
     if not cfg.DATASET.TRAIN:
         raise ValueError("DATASET.TRAIN must be specified in the configuration unless PREDEFINED_SPLIT with SPLIT_GLOB is used.")
 
@@ -110,7 +110,7 @@ def prepare_datasets(cfg, train_fold, val_fold):
     val_dataset = CIFData(val_fold[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                           cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
 
-    collate_fn = collate_pool_leftnet
+    collate_fn = collate_crystal_batch
 
     train_loader = DataLoader(
         train_dataset,
@@ -261,7 +261,7 @@ def test_model(
 
         test_dataset = CIFData(test_data[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                                cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
-        test_loader = DataLoader(test_dataset, collate_fn=collate_pool_leftnet,
+        test_loader = DataLoader(test_dataset, collate_fn=collate_crystal_batch,
                                  batch_size=cfg.SOLVER.BATCH_SIZE, shuffle=False, num_workers=cfg.SOLVER.WORKERS)
         test_results = trainer.test(model, dataloaders=test_loader)
         print(f"Test Results (Fold {str(fold)}): {test_results}")
@@ -287,7 +287,7 @@ def main():
         fold_specs = load_predefined_fold_specs(cfg.DATASET.SPLIT_GLOB)
         print(f"Found {len(fold_specs)} predefined fold(s) from {cfg.DATASET.SPLIT_GLOB}")
     else:
-        train_data, val_data = load_data(cfg)
+        train_data, val_data = load_train_val_dataframes(cfg)
 
     if args.pretrain:
         if use_predefined_split:
