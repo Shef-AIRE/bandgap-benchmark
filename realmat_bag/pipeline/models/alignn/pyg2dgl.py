@@ -1,19 +1,14 @@
 """
 Codes borrowed from ALIGNN (https://github.com/usnistgov/alignn/tree/main)
 """
- 
-from typing import Union, Any
+
+from typing import Any, Union
+
+import torch
 import torch_geometric
-try:
-    import torch
-    import dgl
-except Exception as exp:
-    print("dgl/torch/tqdm is not installed.", exp)
-    pass
 
 
-# copied from most current pyg, since the version running in ocp-models doesn't 
-# have to_dgl()
+# Copied from newer PyG versions since the version in OCP does not expose to_dgl().
 def to_dgl(
     data: Union['torch_geometric.data.Data', 'torch_geometric.data.HeteroData']
 ) -> Any:
@@ -74,29 +69,8 @@ def to_dgl(
 
         return g
 
-    # if isinstance(data, HeteroData):
-    #     data_dict = {}
-    #     for edge_type, store in data.edge_items():
-    #         if store.get('edge_index') is not None:
-    #             row, col = store.edge_index
-    #         else:
-    #             row, col, _ = store['adj_t'].t().coo()
-
-    #         data_dict[edge_type] = (row, col)
-
-    #     g = dgl.heterograph(data_dict)
-
-    #     for node_type, store in data.node_items():
-    #         for attr, value in store.items():
-    #             g.nodes[node_type].data[attr] = value
-
-    #     for edge_type, store in data.edge_items():
-    #         for attr, value in store.items():
-    #             if attr in ['edge_index', 'adj_t']:
-    #                 continue
-    #             g.edges[edge_type].data[attr] = value
-
-        return g
+    if isinstance(data, HeteroData):
+        raise NotImplementedError("HeteroData to DGL conversion is not enabled in this project.")
 
     raise ValueError(f"Invalid data type (got '{type(data)}')")
 

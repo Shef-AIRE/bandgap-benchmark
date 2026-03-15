@@ -3,9 +3,9 @@
 Download CIF files from Materials Project by mp-id.
 
 Examples:
-  python3 download_cif_by_mpid.py --mpids mp-149 mp-13 --out-dir cif_file
-  python3 download_cif_by_mpid.py --input data/stratified_split/stratified_test_formulas.csv --column material_id
-  python3 download_cif_by_mpid.py --input mpids.txt --api-key YOUR_KEY --retries 3
+  python3 -m realmat_bag.utils.cif_downloader --mpids mp-149 mp-13 --out-dir cif_file
+  python3 -m realmat_bag.utils.cif_downloader --input data/stratified_split/stratified_test_formulas.csv --column material_id
+  python3 -m realmat_bag.utils.cif_downloader --input mpids.txt --api-key YOUR_KEY --retries 3
 """
 
 from __future__ import annotations

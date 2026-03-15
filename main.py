@@ -25,7 +25,10 @@ from realmat_bag.pipeline.models.CHGnet.model_chgnet import get_chgnet_model
 from realmat_bag.pipeline.trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
 from traditional_ml import run_traditional_model
-from download_cif_by_mpid import auto_download_missing_cifs, auto_download_missing_cifs_from_frame
+from realmat_bag.utils.cif_downloader import (
+    auto_download_missing_cifs,
+    auto_download_missing_cifs_from_frame,
+)
 
 
 def arg_parse():

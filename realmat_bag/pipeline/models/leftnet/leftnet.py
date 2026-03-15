@@ -76,8 +76,7 @@ def _build_pbc_edge_tensors_from_batch(batch, device, cutoff: float):
     )
 
 
-## radial basis function to embed distances
-## add comments: based on XXX code
+# Radial basis embedding for pairwise distances.
 class rbf_emb(nn.Module):
     """
     modified: delete cutoff with r
@@ -513,8 +512,8 @@ class LEFTNet(nn.Module):
         # input: S_i_j, F_i_j
         # S_i_j shape: (num_nodes, 3, hidden_channels)
         # F_i_j: edge_frame (num_edges, 3, 3), for each edge, 3x3 frame
-        S_i_j = self.S_vector(s, edge_diff.unsqueeze(-1), edge_index, radial_hidden) # TODO: how this works?
-        # S_i_j aggregates information from neighbors, weighted by radial_hidden the edge features. Propagate the features with edges of graph.
+        # Aggregates neighbor information with directional and radial edge features.
+        S_i_j = self.S_vector(s, edge_diff.unsqueeze(-1), edge_index, radial_hidden)
         scalrization1 = torch.sum(S_i_j[i].unsqueeze(2) * edge_frame.unsqueeze(-1), dim=1)
         scalrization2 = torch.sum(S_i_j[j].unsqueeze(2) * edge_frame.unsqueeze(-1), dim=1)
         scalrization1[:, 1, :] = torch.abs(scalrization1[:, 1, :].clone()) # for the perpendicular vector direction not matter

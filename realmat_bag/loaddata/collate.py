@@ -6,7 +6,12 @@ def collate_crystal_batch(dataset_list):
     Collate a list of data and return a batch for predicting crystal
     properties, handling variable sizes.
     """
-    batch_atom_fea, batch_nbr_fea, batch_nbr_fea_idx, batch_positions, batch_atom_num, batch_lattices = [], [], [], [], [], []
+    batch_atom_fea = []
+    batch_nbr_fea = []
+    batch_nbr_fea_idx = []
+    batch_positions = []
+    batch_atom_num = []
+    batch_lattices = []
     crystal_atom_idx, batch_target = [], []
     batch_cif_ids = []
     batch_atom_indices = []
@@ -45,7 +50,7 @@ def collate_crystal_batch(dataset_list):
         atom_num=torch.cat(batch_atom_num, dim=0),  # Concatenate atom numbers
         lattices=torch.cat(batch_lattices, dim=0),  # Concatenate lattices
         crystal_atom_idx=crystal_atom_idx,  # List of tensors for crystal-to-atom mapping
-        target=torch.stack(batch_target, dim=0),  # Stack targets (assuming they are uniform in shape)
+        target=torch.stack(batch_target, dim=0),  # Targets have consistent shape in this dataset.
         cif_ids=batch_cif_ids,  # List of cif_ids
         batch_idx=torch.cat(batch_atom_indices, dim=0),  # Concatenate batch indices
         structures=batch_structures,
@@ -57,6 +62,8 @@ collate_pool_leftnet = collate_crystal_batch
 
 
 class BatchData:
+    """Container for batched crystal graph tensors and metadata."""
+
     def __init__(
         self,
         atom_fea,
