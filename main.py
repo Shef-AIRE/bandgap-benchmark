@@ -5,33 +5,30 @@ from datetime import datetime
 import json
 import pandas as pd
 import pytorch_lightning as pl
-from sklearn.inspection import permutation_importance
 from sklearn.model_selection import KFold
-from sklearn.metrics import make_scorer, mean_absolute_error, mean_squared_error, r2_score
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
 import torch
 import numpy as np
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
-from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from pytorch_lightning.loggers import WandbLogger
 from torch.utils.data import DataLoader
 from sklearn.utils import shuffle
 import random
 from pathlib import Path
 
-from loaddata.dataloader import extract_features
-from models.cgcnn.model_cgcnn import get_cgcnn_model
-from loaddata.cifdata import CIFData
-from loaddata.collate import collate_pool_leftnet
-from models.leftnet.model_leftnet import get_leftnet_model
-from models.cartnet.model_cartnet import get_cartnet_model
-from models.alignn.model_alignn import get_alignn_model
-from models.CHGnet.model_chgnet import get_chgnet_model
-from trainer import MetricsCallback, mean_relative_error
+from realmat_bag.loaddata.cifdata import CIFData
+from realmat_bag.loaddata.collate import collate_crystal_batch
+from realmat_bag.pipeline.models.cgcnn.model_cgcnn import get_cgcnn_model
+from realmat_bag.pipeline.models.leftnet.model_leftnet import get_leftnet_model
+from realmat_bag.pipeline.models.cartnet.model_cartnet import get_cartnet_model
+from realmat_bag.pipeline.models.alignn.model_alignn import get_alignn_model
+from realmat_bag.pipeline.models.CHGnet.model_chgnet import get_chgnet_model
+from realmat_bag.pipeline.trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
 from traditional_ml import run_traditional_model
+from realmat_bag.utils.cif_downloader import (
+    auto_download_missing_cifs,
+    auto_download_missing_cifs_from_frame,
+)
 
 
 def arg_parse():
@@ -59,7 +56,7 @@ def load_json_as_dataframe(path):
     return df
 
 
-def load_data(cfg):
+def load_train_val_dataframes(cfg):
     if not cfg.DATASET.TRAIN:
         raise ValueError("DATASET.TRAIN must be specified in the configuration unless PREDEFINED_SPLIT with SPLIT_GLOB is used.")
 
@@ -100,6 +97,15 @@ def load_predefined_fold_specs(split_glob):
 
 
 def prepare_datasets(cfg, train_fold, val_fold):
+    auto_download_missing_cifs(
+        mpids=pd.concat([train_fold["mpids"], val_fold["mpids"]], ignore_index=True),
+        out_dir=cfg.MODEL.CIF_FOLDER,
+        api_key=os.getenv("MP_API_KEY", ""),
+        retries=2,
+        sleep_s=0.8,
+        auto_download=True,
+    )
+
     train_fold = shuffle(train_fold[['mpids', 'bg']], random_state=cfg.SOLVER.SEED)
     train_dataset = CIFData(train_fold, cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                             cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
@@ -107,7 +113,7 @@ def prepare_datasets(cfg, train_fold, val_fold):
     val_dataset = CIFData(val_fold[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                           cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
 
-    collate_fn = collate_pool_leftnet
+    collate_fn = collate_crystal_batch
 
     train_loader = DataLoader(
         train_dataset,
@@ -239,16 +245,26 @@ def evaluate_model(trainer, model, val_loader, fold):
     return val_results
 
 
-def test_model(cfg, trainer, model, fold):
+def test_model(
+    cfg,
+    trainer,
+    model,
+    fold,
+):
     if cfg.DATASET.VAL:
-        with open(cfg.DATASET.VAL, 'r') as f:
-            test_data = json.load(f)
-            test_data = pd.DataFrame.from_dict(test_data, orient='index')
-            test_data.reset_index(inplace=True)
-            test_data.rename(columns={'index': 'mpids'}, inplace=True)
+        test_data = load_json_as_dataframe(cfg.DATASET.VAL)
+        auto_download_missing_cifs_from_frame(
+            frame=test_data,
+            out_dir=cfg.MODEL.CIF_FOLDER,
+            api_key=os.getenv("MP_API_KEY", ""),
+            retries=2,
+            sleep_s=0.8,
+            auto_download=True,
+        )
+
         test_dataset = CIFData(test_data[['mpids', 'bg']], cfg.MODEL.CIF_FOLDER, cfg.MODEL.INIT_FILE,
                                cfg.MODEL.MAX_NBRS, cfg.MODEL.RADIUS, cfg.SOLVER.RANDOMIZE)
-        test_loader = DataLoader(test_dataset, collate_fn=collate_pool_leftnet,
+        test_loader = DataLoader(test_dataset, collate_fn=collate_crystal_batch,
                                  batch_size=cfg.SOLVER.BATCH_SIZE, shuffle=False, num_workers=cfg.SOLVER.WORKERS)
         test_results = trainer.test(model, dataloaders=test_loader)
         print(f"Test Results (Fold {str(fold)}): {test_results}")
@@ -274,7 +290,7 @@ def main():
         fold_specs = load_predefined_fold_specs(cfg.DATASET.SPLIT_GLOB)
         print(f"Found {len(fold_specs)} predefined fold(s) from {cfg.DATASET.SPLIT_GLOB}")
     else:
-        train_data, val_data = load_data(cfg)
+        train_data, val_data = load_train_val_dataframes(cfg)
 
     if args.pretrain:
         if use_predefined_split:
@@ -287,7 +303,11 @@ def main():
                 cfg.DATASET.VAL = spec["val_path"]
                 cfg.freeze()
 
-                train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, spec["train_df"], spec["val_df"])
+                train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(
+                    cfg,
+                    spec["train_df"],
+                    spec["val_df"],
+                )
 
                 structures = train_dataset[0]
                 cfg.defrost()
@@ -299,14 +319,11 @@ def main():
                 model = get_model(cfg)
                 wandb_logger, log_dir = setup_logger(cfg, fold_label)
                 trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, fold_label)
-
-                ckpt_path = cfg.MODEL.PRETRAINED_MODEL_PATH if os.path.exists(cfg.MODEL.PRETRAINED_MODEL_PATH) else None
-
+                model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
                 trainer.fit(
                     model,
                     train_dataloaders=train_loader,
                     val_dataloaders=val_loader,
-                    ckpt_path=ckpt_path
                 )
 
                 best_model_path = checkpoint_callback.best_model_path
@@ -327,7 +344,11 @@ def main():
             train_idx, val_idx = next(kf.split(train_data))
             train_fold = train_data.iloc[train_idx]
             val_fold = train_data.iloc[val_idx]
-            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, train_fold, val_fold)
+            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(
+                cfg,
+                train_fold,
+                val_fold,
+            )
 
             # Extract feature dimensions
             structures = train_dataset[0]
@@ -341,15 +362,11 @@ def main():
             model = get_model(cfg)
             wandb_logger, log_dir = setup_logger(cfg, "pretrain")
             trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, "pretrain")
-
-            # Resume from checkpoint if exists
-            ckpt_path = cfg.MODEL.PRETRAINED_MODEL_PATH if os.path.exists(cfg.MODEL.PRETRAINED_MODEL_PATH) else None
-
+            model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
             trainer.fit(
                 model,
                 train_dataloaders=train_loader,
                 val_dataloaders=val_loader,
-                ckpt_path=ckpt_path
             )
 
             # Evaluate best model
@@ -395,7 +412,11 @@ def main():
                 cfg.freeze()
 
             # Prepare datasets and loaders
-            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(cfg, train_fold, val_fold)
+            train_loader, val_loader, train_dataset, val_dataset = prepare_datasets(
+                cfg,
+                train_fold,
+                val_fold,
+            )
 
             structures = train_dataset[0]  # for just one of the item in cifs
             orig_atom_fea_len = structures.atom_fea.shape[-1]
@@ -455,8 +476,7 @@ def main():
                 continue
 
             model = get_model(cfg)
-            if cfg.MODEL.NAME not in ("alignn", "chgnet"):
-                model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
+            model = load_pretrained_model(model, cfg.MODEL.PRETRAINED_MODEL_PATH)
 
             wandb_logger, log_dir = setup_logger(cfg, fold_label)
             trainer, checkpoint_callback = setup_trainer(cfg, args, wandb_logger, log_dir, fold_label)

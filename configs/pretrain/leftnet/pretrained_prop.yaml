@@ -1,20 +1,19 @@
 DATASET:
   TRAIN: "data/pretrain_data.json"
-  VAL: 'data/filtered_data/test_data.json'
+  VAL: 'data/fine_tune/test_data.json'
 MODEL:
   NAME: "leftnet"
-  PRETRAINED_MODEL_PATH: " " # NOT EXIST
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 SOLVER:
-  LR: 0.01
+  LR: 0.001
   EPOCHS: 200
-  NUM_RUNS: 1
 
 LEFTNET:
   ENCODING: 'prop'
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "/leftnet/m1_full_lr0.01_encoding"
+  LOG_DIR_NAME: "pretrain/leftnet_prop"

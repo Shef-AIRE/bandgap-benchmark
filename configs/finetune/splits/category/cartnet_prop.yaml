@@ -2,22 +2,16 @@ SOLVER:
   SEED: 42
   EPOCHS: 100
   LR: 0.001
-  BATCH_SIZE: 64
-  NUM_RUNS: 1
   NUM_FOLDS: 10
   RANDOMIZE: true
   TASK: regression
-  DISABLE_CUDA: false
   WORKERS: 4
-  START_EPOCH: 0
   MOMENTUM: 0.9
   WEIGHT_DECAY: 0.0
-  PRINT_FREQ: 10
-  RESUME: ''
   OPTIM: SGD
 MODEL:
   NAME: cartnet
-  PRETRAINED_MODEL_PATH: saved_models/pretrain/cartnet_prop/pretrain-best-mre-epoch=84-val_mre=0.2908.ckpt
+  PRETRAINED_MODEL_PATH: saved_models/pretrain/cartnet_prop/best.ckpt
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
   MAX_NBRS: 12
@@ -37,5 +31,5 @@ DATASET:
   TRAIN: ''
   VAL: ''
   PREDEFINED_SPLIT: true
-  SPLIT_GLOB: data/split_by_category/*.train.json
+  SPLIT_GLOB: data/domain_split/lomo_split/*.train.json
 

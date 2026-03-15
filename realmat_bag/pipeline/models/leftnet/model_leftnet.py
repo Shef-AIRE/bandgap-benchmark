@@ -1,0 +1,70 @@
+from copy import deepcopy
+
+from realmat_bag.pipeline.trainer import MaterialsTrainer
+from realmat_bag.pipeline.models.leftnet.leftnet import LEFTNet
+
+
+def get_config(cfg):
+    """
+    Sets the hyperparameters for the optimizer and experiment using the config file
+    Args:
+        cfg: A YACS config object.
+    """
+    common_cfg = cfg.MODEL_COMMON
+    leftnet_cfg = cfg.LEFTNET
+    cutoff = leftnet_cfg["CUTOFF"] if "CUTOFF" in leftnet_cfg else common_cfg.CUTOFF
+    num_radial = leftnet_cfg["NUM_RADIAL"] if "NUM_RADIAL" in leftnet_cfg else common_cfg.NUM_RADIAL
+    output_dim = leftnet_cfg["OUTPUT_DIM"] if "OUTPUT_DIM" in leftnet_cfg else common_cfg.OUTPUT_DIM
+
+    config_params = {
+        "leftnet_params": {
+            "cutoff": cutoff,
+            "hidden_channels": cfg.LEFTNET.HIDDEN_CHANNELS,
+            "num_layers": cfg.LEFTNET.NUM_LAYERS,
+            "num_radial": num_radial,
+            "regress_forces": cfg.LEFTNET.REGRESS_FORCES,
+            "use_pbc": cfg.LEFTNET.USE_PBC,
+            "otf_graph": cfg.LEFTNET.OTF_GRAPH,
+            "output_dim": output_dim,
+        },
+        "train_params": {
+            "init_lr": cfg.SOLVER.LR,
+            "lr_milestones": cfg.SOLVER.LR_MILESTONES,
+            "max_epochs": cfg.SOLVER.EPOCHS,
+            "optimizer": {
+                "type": cfg.SOLVER.OPTIM,
+                "optim_params": {
+                    "momentum": cfg.SOLVER.MOMENTUM,
+                    "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+                },
+            },
+            "layer_freeze": cfg.LEFTNET.LAYER_FREEZE,
+        },
+        "encoding": cfg.LEFTNET.ENCODING,
+        
+    }
+
+    return config_params
+
+
+def get_leftnet_model(cfg):
+    config_params = get_config(cfg)
+    train_params = config_params["train_params"]
+    train_params_local = deepcopy(train_params)
+    leftnet_params = config_params["leftnet_params"]
+    leftnet_params_local = deepcopy(leftnet_params)
+    encoding = config_params["encoding"]
+
+    num_atoms = 1
+    bond_feat_dim = leftnet_params_local.get("num_gaussians", 50)
+
+    model = LEFTNet(
+        bond_feat_dim=bond_feat_dim,
+        num_targets=leftnet_params_local.get("output_dim"),
+        encoding=encoding,
+        **leftnet_params_local,
+    )
+    # return model
+    trainer = MaterialsTrainer(model=model, **train_params_local)
+
+    return trainer

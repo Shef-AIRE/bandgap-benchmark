@@ -1,0 +1,24 @@
+DATASET:
+  TRAIN: ""
+  VAL: ""
+  PREDEFINED_SPLIT: True
+  SPLIT_GLOB: "data/domain_split/chemsys_split/*.train.json"
+
+MODEL:
+  NAME: "svm"
+  PRETRAINED_MODEL_PATH: ""
+  INIT_FILE: "cif_file/atom_init.json"
+  CIF_FOLDER: "cif_file"
+  HYPERPARAMS:
+    SEARCH: grid
+    C: [1, 10, 100]
+    gamma: [0.01, 0.1, 1]
+    epsilon: [0.01, 0.1, 0.5]
+    kernel: ['rbf']
+
+SOLVER:
+  NUM_FOLDS: 10
+
+LOGGING:
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "domain_ood/chemsys/svm"

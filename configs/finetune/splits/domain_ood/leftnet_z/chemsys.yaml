@@ -1,0 +1,24 @@
+DATASET:
+  TRAIN: ""
+  VAL: ""
+  PREDEFINED_SPLIT: True
+  SPLIT_GLOB: "data/domain_split/chemsys_split/*.train.json"
+
+MODEL:
+  NAME: "leftnet"
+  PRETRAINED_MODEL_PATH: "saved_models/pretrain/leftnet_z/best.ckpt"
+  INIT_FILE: "cif_file/atom_init.json"
+  CIF_FOLDER: "cif_file"
+
+SOLVER:
+  LR: 0.001
+  NUM_FOLDS: 10
+  EPOCHS: 50
+
+LEFTNET:
+  ENCODING: "z"
+  LAYER_FREEZE: "none"
+
+LOGGING:
+  LOG_DIR: "saved_models"
+  LOG_DIR_NAME: "split_json/leftnet_z/chemsys"

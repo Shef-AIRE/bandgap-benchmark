@@ -2,18 +2,12 @@ SOLVER:
   SEED: 42
   EPOCHS: 100
   LR: 0.001
-  BATCH_SIZE: 32
-  NUM_RUNS: 1
   NUM_FOLDS: 10
   RANDOMIZE: True
   TASK: "regression"  # Choices: ['regression', 'classification']
-  DISABLE_CUDA: False
   WORKERS: 4
-  START_EPOCH: 0
   LR_MILESTONES: [50, 75]
   WEIGHT_DECAY: 0.0
-  PRINT_FREQ: 10
-  RESUME: ""
   OPTIM: "SGD"  # Choices: ['SGD', 'Adam']
 
 MODEL:
@@ -25,6 +19,7 @@ MODEL:
   RADIUS: 8.0
 
 CARTNET:
+  ENCODING: z
   DIM_IN: 256  # Add appropriate default value
   DIM_RBF: 64  # Add appropriate default value
   NUM_LAYERS: 4  # Add appropriate default value

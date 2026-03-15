@@ -11,7 +11,6 @@ _C = CN()
 _C.DATASET = CN()
 _C.DATASET.TRAIN = "data/ds1.json"
 _C.DATASET.VAL = "data/ds3.json"
-_C.DATASET.RATIO = 1.0 # Ratio of the dataset to use
 _C.DATASET.PREDEFINED_SPLIT = False
 _C.DATASET.SPLIT_GLOB = ""
 
@@ -22,21 +21,16 @@ _C.DATASET.SPLIT_GLOB = ""
 _C.SOLVER = CN()
 _C.SOLVER.SEED = 42
 _C.SOLVER.EPOCHS = 1
-_C.SOLVER.LR = 0.01
+_C.SOLVER.LR = 0.001
 _C.SOLVER.BATCH_SIZE = 64
-_C.SOLVER.NUM_RUNS = 1
 _C.SOLVER.NUM_FOLDS = 10
 _C.SOLVER.RANDOMIZE = False
 _C.SOLVER.TASK = "regression"  # Choices: ['regression', 'classification']
-_C.SOLVER.DISABLE_CUDA = False
 _C.SOLVER.WORKERS = 0
-_C.SOLVER.START_EPOCH = 0
 _C.SOLVER.LR_MILESTONES = [100, 200]
 
 _C.SOLVER.MOMENTUM = 0.9
 _C.SOLVER.WEIGHT_DECAY = 0.0
-_C.SOLVER.PRINT_FREQ = 10
-_C.SOLVER.RESUME = ""
 
 _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 
@@ -46,8 +40,8 @@ _C.SOLVER.OPTIM = "SGD"  # Choices: ['SGD', 'Adam']
 _C.MODEL = CN()
 _C.MODEL.NAME = "cgcnn"  # Choices: ['cgcnn', 'leftnet', 'alignn', 'cartnet', 'chgnet', 'random_forest', 'linear_regression', 'svm']
 _C.MODEL.PRETRAINED_MODEL_PATH = ""
-_C.MODEL.CIF_FOLDER = "./cifs"
-_C.MODEL.INIT_FILE = "./init.json"
+_C.MODEL.CIF_FOLDER = "cif_file"
+_C.MODEL.INIT_FILE = "cif_file/atom_init.json"
 _C.MODEL.MAX_NBRS = 12
 _C.MODEL.RADIUS = 7.0
 _C.MODEL.HYPERPARAMS = CN(new_allowed=True)
@@ -71,7 +65,6 @@ _C.CGCNN.ATOM_FEA_LEN = 64
 _C.CGCNN.H_FEA_LEN = 128
 _C.CGCNN.N_CONV = 3
 _C.CGCNN.N_H = 1
-_C.CGCNN.NUM_REPEAT = 1
 
 _C.CGCNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
 _C.CGCNN.FEATURE_FUSION = "none"  # Choices: ['none', 'data level', 'fc level', 'feature level']
@@ -104,20 +97,18 @@ _C.ALIGNN.NUM_LAYERS = 4
 _C.ALIGNN.ALIGNN_LAYERS = 4
 _C.ALIGNN.GCN_LAYERS = 4
 _C.ALIGNN.NUM_RBF = None
-_C.ALIGNN.NUM_GAUSSIANS = 80
-_C.ALIGNN.BOND_FEAT_DIM = 80
+_C.ALIGNN.NUM_GAUSSIANS = 40
+_C.ALIGNN.BOND_FEAT_DIM = 40
 _C.ALIGNN.TRIPLET_INPUT_FEATURES = 40
 _C.ALIGNN.EMBEDDING_FEATURES = 64
-_C.ALIGNN.ATOM_EMBEDDING_SIZE = 256
-_C.ALIGNN.CUTOFF = 5.0
-_C.ALIGNN.DROPOUT = 0.0
+_C.ALIGNN.ATOM_EMBEDDING_SIZE = 128
+_C.ALIGNN.ATOM_GRAPH_CUTOFF = 6.0
+_C.ALIGNN.BOND_GRAPH_CUTOFF = 3.0
 _C.ALIGNN.READOUT = "mean"  # Choices: ['mean', 'sum', 'max']
-_C.ALIGNN.MAX_NEIGHBORS = 1000
 _C.ALIGNN.LAYER_FREEZE = "none"  # Choices: ['all', 'embedding', 'none']
-_C.ALIGNN.ACTIVATION = "silu"
-_C.ALIGNN.RBF_TRAINABLE = False
 _C.ALIGNN.ENCODING = "prop"  # Choices: ['prop', 'z']
 _C.ALIGNN.MAX_NUM_ELEMENTS = 94
+_C.ALIGNN.MAX_NEIGHBORS = 24
 _C.ALIGNN.LINK = "identity"
 _C.ALIGNN.REGRESS_FORCES = False
 
@@ -157,7 +148,6 @@ _C.CHGNET.IS_INTENSIVE = True
 _C.CHGNET.NON_LINEARITY = "silu"
 _C.CHGNET.ATOM_GRAPH_CUTOFF = 6.0
 _C.CHGNET.BOND_GRAPH_CUTOFF = 3.0
-_C.CHGNET.GRAPH_CONVERTER_ALGORITHM = "fast"
 _C.CHGNET.CUTOFF_COEFF = 8
 _C.CHGNET.LEARNABLE_RBF = True
 _C.CHGNET.GMLP_NORM = "layer"
@@ -166,14 +156,6 @@ _C.CHGNET.ENCODING = "z"  # Choices: ['z', 'prop']
 _C.CHGNET.ATOM_INPUT_DIM = 92
 _C.CHGNET.MAX_NUM_ELEMENTS = 94
 
-
-# -----------------------------------------------------------------------------
-# Output paths
-# -----------------------------------------------------------------------------
-_C.OUTPUT = CN()
-_C.OUTPUT.DIR = "results"
-_C.OUTPUT.LOOP_RESULTS = "loop_50epochs.csv"
-_C.OUTPUT.PREDICTIONS = "predictions_reduced_ds2.csv"
 
 # -----------------------------------------------------------------------------
 # Logging

@@ -2,7 +2,7 @@ DATASET:
   TRAIN: ''
   VAL: ''
   PREDEFINED_SPLIT: true
-  SPLIT_GLOB: data/split_by_category/*.train.json
+  SPLIT_GLOB: data/domain_split/lomo_split/*.train.json
 MODEL:
   NAME: leftnet
   PRETRAINED_MODEL_PATH: ''
@@ -12,7 +12,6 @@ SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 100
-  NUM_RUNS: 1
 LEFTNET:
   ENCODING: prop
   LAYER_FREEZE: none

@@ -14,13 +14,12 @@ MODEL:
     C: [1, 10, 100]
     gamma: [0.01, 0.1, 1]
     epsilon: [0.01, 0.1, 0.5]
-    kernel: ['rbf']
+    kernel: ['linear', 'poly', 'rbf', 'sigmoid']
 
 SOLVER:
   SEED: 42
   NUM_FOLDS: 10
   EPOCHS: 1
-  NUM_RUNS: 1
   RANDOMIZE: False
 
 LOGGING:

@@ -4,7 +4,7 @@ DATASET:
 
 MODEL:
   NAME: "alignn"
-  PRETRAINED_MODEL_PATH: ""
+  PRETRAINED_MODEL_PATH: "saved_models/pretrain/alignn_z/pretrain-last-epoch=76.ckpt"
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
@@ -12,30 +12,12 @@ SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 200
-  NUM_RUNS: 1
-  BATCH_SIZE: 32
+
 
 ALIGNN:
-  HIDDEN_DIM: 256
-  ATOM_EMBEDDING_SIZE: 256
-  NUM_LAYERS: 4
-  ALIGNN_LAYERS: 4
-  GCN_LAYERS: 4
-  NUM_RBF: 64
-  DROPOUT: 0.05
-  READOUT: "mean"
-  ACTIVATION: "silu"
-  RBF_TRAINABLE: False
-  MAX_NEIGHBORS: 1000
   ENCODING: "z"
-  BOND_FEAT_DIM: 80
-  TRIPLET_INPUT_FEATURES: 40
-  EMBEDDING_FEATURES: 64
+
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "pretrain/alignn"
-
-OUTPUT:
-  LOOP_RESULTS: "result/alignn_pretrain/loop_200epochs.csv"
-  PREDICTIONS: "result/alignn_pretrain/predict.csv"
+  LOG_DIR_NAME: "pretrain/alignn_z"

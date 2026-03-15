@@ -2,18 +2,16 @@ DATASET:
   TRAIN: ''
   VAL: ''
   PREDEFINED_SPLIT: true
-  SPLIT_GLOB: data/split_by_category/*.train.json
+  SPLIT_GLOB: data/domain_split/lomo_split/*.train.json
 MODEL:
   NAME: chgnet
-  PRETRAINED_MODEL_PATH: saved_models/chgnet_prop_cutoff5/best-mre-epoch=34-val_mre=0.2879.ckpt
+  PRETRAINED_MODEL_PATH: saved_models/pretrain/chgnet_prop/best.ckpt
   INIT_FILE: cif_file/atom_init.json
   CIF_FOLDER: cif_file
 SOLVER:
   LR: 0.001
   NUM_FOLDS: 10
   EPOCHS: 100
-  NUM_RUNS: 1
-  BATCH_SIZE: 32
 CHGNET:
   ATOM_FEA_DIM: 64
   BOND_FEA_DIM: 64
@@ -33,7 +31,6 @@ CHGNET:
   NON_LINEARITY: silu
   ATOM_GRAPH_CUTOFF: 6.0
   BOND_GRAPH_CUTOFF: 3.0
-  GRAPH_CONVERTER_ALGORITHM: fast
   CUTOFF_COEFF: 8
   LEARNABLE_RBF: true
   GMLP_NORM: layer

@@ -4,22 +4,17 @@ DATASET:
 
 MODEL:
   NAME: "cgcnn"
-  PRETRAINED_MODEL_PATH: " " # NOT EXIST
+  PRETRAINED_MODEL_PATH: ""
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
 
 SOLVER:
   EPOCHS: 200
-  NUM_RUNS: 1
 
 CGCNN:
   FEATURE_FUSION: 'none'
 
 LOGGING:
   LOG_DIR: "saved_models"
-  LOG_DIR_NAME: "m1_full_lr0.01"
-
-OUTPUT:
-  LOOP_RESULTS: 'result/ds1_no_block/loop_200epochs.csv'
-  PREDICTIONS: 'result/ds1_no_block/predict.csv'
+  LOG_DIR_NAME: "pretrain/cgcnn"
