@@ -29,7 +29,7 @@ def _build_estimator(model_name: str, seed: int) -> Any:
     if model_name == "svm":
         # kernel will be set via hyperparams if provided
         return SVR()
-    raise ValueError(f"Unsupported traditional model: {model_name}")
+    raise ValueError(f"Unsupported classical model: {model_name}")
 
 
 def _parse_hyperparams(cfg) -> Dict[str, Any]:
@@ -49,7 +49,7 @@ def _parse_hyperparams(cfg) -> Dict[str, Any]:
     return hyper_dict
 
 
-def run_traditional_model(cfg, train_dataset, val_dataset, fold_label: str, test_dataset=None):
+def run_classical_model(cfg, train_dataset, val_dataset, fold_label: str, test_dataset=None):
     model_name = cfg.MODEL.NAME
     seed = cfg.SOLVER.SEED
 

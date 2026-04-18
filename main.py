@@ -24,7 +24,7 @@ from realmat_bag.pipeline.models.alignn.model_alignn import get_alignn_model
 from realmat_bag.pipeline.models.CHGnet.model_chgnet import get_chgnet_model
 from realmat_bag.pipeline.trainer import MetricsCallback, mean_relative_error
 from config import get_cfg_defaults
-from traditional_ml import run_traditional_model
+from classical_ml import run_classical_model
 from realmat_bag.utils.cif_downloader import (
     auto_download_missing_cifs,
     auto_download_missing_cifs_from_frame,
@@ -444,7 +444,7 @@ def main():
                         cfg.SOLVER.RANDOMIZE,
                     )
 
-                results = run_traditional_model(
+                results = run_classical_model(
                     cfg,
                     train_dataset,
                     val_dataset,
