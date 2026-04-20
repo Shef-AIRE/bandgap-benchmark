@@ -1,0 +1,27 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+wandb/
+saved_models/*
+!saved_models/pretrain/
+saved_models/pretrain/**
+!saved_models/pretrain/**/best.ckpt
+cif_file/
+leave_one_material_out/
+scripts/
+logs/
+lightning_logs/
+figs/
+analysis_outputs/
+.vscode/
+
+
+*.pdf
+*.pt 
+*.sh
+*.png
+*.log
+output_test/
+traditional_shap.py
+traditional_shap_main.ipynb

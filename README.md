@@ -1,22 +1,22 @@
-# Benchmarking Band Gap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data
+# Benchmarking Bandgap Prediction For Semiconductor Materials Using Multimodal And Multi-fidelity Data
 
 This repository contains the PyTorch Lightning implementation of the benchmark described in our paper:
 
-"Benchmarking Band Gap Prediction for Semiconductor Materials Using Multimodal and Multi-fidelity Data."
+"Benchmarking Bandgap Prediction for Semiconductor Materials Using Multimodal and Multi-fidelity Data."
 
-The benchmark evaluates machine learning models for semiconductor band gap prediction under more realistic deployment scenarios, including experimental data prediction, computational pretraining, and domain-based out-of-distribution evaluation.
+The benchmark evaluates machine learning models for semiconductor bandgap prediction under more realistic deployment scenarios, including experimental data prediction, computational pretraining, and domain-based out-of-distribution evaluation.
 
 ## Dataset
 
 We compiled a new multimodal, multi-fidelity dataset by combining data from:
 
-- Materials Project (MP) – computational band gaps
-- BandgapDatabase1; DS2; Matbench-expt – experimentally measured band gaps
+- Materials Project (MP) – computational bandgaps
+- BandgapDatabase1; DS2; Matbench-expt – experimentally measured bandgaps
 
 The resulting dataset contains:
 
-- 60,218 low-fidelity computational band gaps
-- 1,705 high-fidelity experimental band gaps
+- 60,218 low-fidelity computational bandgaps
+- 1,705 high-fidelity experimental bandgaps
 
 Each experimental sample is aligned with a crystal structure through the Materials Project ID (MPID). Crystal structures can be retrieved directly from the Materials Project database.
 
@@ -41,12 +41,12 @@ For classical machine learning models, we used structure-derived atomic features
 
 `cif_file.zip` - Contains `.cif` files and the atomic encoding file used in the benchmark.
 
-`data/` - Directory containing MPIDs and corresponding band gap values:
+`data/` - Directory containing MPIDs and corresponding bandgap values:
 
-* `pretrain_data.json` - 60,218 PBE band gap values.
-* `fine_tune/train_data.json` - 1,534 experimental band gap values.
-* `fine_tune/test_data.json` - 171 experimental band gap values.
-* `fine_tune/` total - 1,705 experimental band gap values.
+* `pretrain_data.json` - 60,218 PBE bandgap values.
+* `fine_tune/train_data.json` - 1,534 experimental bandgap values.
+* `fine_tune/test_data.json` - 171 experimental bandgap values.
+* `fine_tune/` total - 1,705 experimental bandgap values.
 * `data_by_type/` - Data used for "leave-one-material-out" splits, categorized by material type.
 
 `configs/` - Configuration files for training models.
