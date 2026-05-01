@@ -1,4 +1,4 @@
-# Benchmarking Bandgap Prediction for Semiconductor Materials Using Multimodal and Multi-Fidelity Data
+# Benchmarking bandgap prediction in semiconductors under experimental and realistic evaluation settings
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
