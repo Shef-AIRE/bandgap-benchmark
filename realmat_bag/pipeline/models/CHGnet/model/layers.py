@@ -1,3 +1,5 @@
+"""Convolution, pooling, and readout layers for CHGNet."""
+
 from __future__ import annotations
 
 import torch

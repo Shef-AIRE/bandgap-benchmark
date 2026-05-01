@@ -1,3 +1,5 @@
+"""Factory functions for constructing LEFTNet benchmark models."""
+
 from copy import deepcopy
 
 from realmat_bag.pipeline.trainer import MaterialsTrainer

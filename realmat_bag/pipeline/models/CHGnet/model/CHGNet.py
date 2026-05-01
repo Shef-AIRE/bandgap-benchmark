@@ -1,3 +1,5 @@
+"""CHGNet neural network architecture for crystal property prediction."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence

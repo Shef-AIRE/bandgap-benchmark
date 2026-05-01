@@ -1,3 +1,5 @@
+"""Geometry and radial basis helpers for CartNet layers."""
+
 import torch
 import math
 import numpy as np

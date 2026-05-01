@@ -1,3 +1,5 @@
+"""Batch collation helpers for crystal graph datasets."""
+
 import torch
 
 

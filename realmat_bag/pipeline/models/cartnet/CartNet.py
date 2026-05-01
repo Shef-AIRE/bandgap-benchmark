@@ -1,6 +1,7 @@
 # Copyright Universitat Politècnica de Catalunya 2024 https://imatge.upc.edu
 # Distributed under the MIT License.
 # (See accompanying file README.md file or copy at http://opensource.org/licenses/MIT)
+"""CartNet architecture adapted for crystal bandgap prediction."""
 
 import torch
 from torch_cluster import radius_graph

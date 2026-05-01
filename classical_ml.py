@@ -1,3 +1,5 @@
+"""Classical machine learning training utilities for bandgap benchmarks."""
+
 import json
 import os
 from typing import Any, Dict, Optional

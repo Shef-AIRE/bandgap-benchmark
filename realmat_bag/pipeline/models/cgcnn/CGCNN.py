@@ -1,4 +1,5 @@
 # This code is borrowed from the CGCNN implementation in M2Hub (https://github.com/yuanqidu/M2Hub).
+"""CGCNN architecture adapted for crystal bandgap prediction."""
 
 import torch
 import torch.nn as nn

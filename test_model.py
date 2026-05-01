@@ -1,3 +1,5 @@
+"""Evaluation CLI for running saved checkpoints on CIF test data."""
+
 import argparse
 import os
 import json

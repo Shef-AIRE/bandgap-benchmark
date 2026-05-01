@@ -1,3 +1,5 @@
+"""Shared neural network helper layers and activation functions for CHGNet."""
+
 from __future__ import annotations
 
 import itertools

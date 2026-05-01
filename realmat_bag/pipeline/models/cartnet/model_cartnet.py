@@ -1,3 +1,5 @@
+"""Factory functions for constructing CartNet benchmark models."""
+
 import os
 from copy import deepcopy
 

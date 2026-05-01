@@ -1,4 +1,5 @@
 # The following code is a modified version of the original code from the LEFTNet repository (https://github.com/yuanqidu/LeftNet).
+"""LEFTNet architecture adapted for crystal bandgap prediction."""
 
 import math
 from math import pi

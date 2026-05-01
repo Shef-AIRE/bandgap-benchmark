@@ -1,3 +1,5 @@
+"""Default configuration tree for bandgap prediction experiments."""
+
 from yacs.config import CfgNode as CN
 
 # -----------------------------------------------------------------------------

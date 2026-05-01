@@ -1,3 +1,5 @@
+"""PyTorch Lightning training module and metrics callbacks."""
+
 import numpy as np
 import pandas as pd
 import pytorch_lightning as pl

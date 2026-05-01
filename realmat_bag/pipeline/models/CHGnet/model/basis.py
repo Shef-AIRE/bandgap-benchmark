@@ -1,3 +1,5 @@
+"""Radial and angular basis functions for CHGNet."""
+
 from __future__ import annotations
 
 import numpy as np

@@ -1,3 +1,5 @@
+"""Graph node and edge primitives for ALIGNN crystal graphs."""
+
 from __future__ import annotations
 
 import json
