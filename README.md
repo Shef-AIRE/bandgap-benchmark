@@ -64,11 +64,20 @@ For classical machine learning models, we used structure-derived atomic features
 
 ## Installation
 
+Clone the repository and enter the project directory:
+
+```bash
+git clone https://github.com/Shef-AIRE/bandgap-benchmark.git
+cd bandgap-benchmark
+```
+
 Install dependencies with:
 
 ```bash
 pip install -r requirements.txt
 ```
+The whole installation process should take ~10 minutes.
+
 
 ## Training
 
@@ -78,11 +87,17 @@ To train a model, use the following command (add `--pretrain` to perform pretrai
 python main.py --cfg configs/PATH_TO_YOUR_CONFIG.yaml
 ```
 
+The model output should be the predicted band gap.
+
 After training, predictions can be generated using:
 
 ```bash
 python test_model.py --cfg configs/PATH_TO_YOUR_CONFIG.yaml --checkpoint saved_models/PATH_TO_YOUR_MODEL.ckpt --cif_folder cif_file --test_data data/fine_tune/test_data.json
 ```
+
+A demo is provided in [`example.ipynb`](example.ipynb), including data loading, model training and predicted bandgap. The demo is expected to run in ~3 minutes.
+
+To reproduce the paper results, use the relevant YAML configuration files from [`configs/`](configs/). Please note that different random seeds or devices may affect the results.
 
 ## Data Download
 
