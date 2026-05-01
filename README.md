@@ -1,6 +1,6 @@
 # Benchmarking Bandgap Prediction for Semiconductor Materials Using Multimodal and Multi-Fidelity Data
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 This repository contains the PyTorch Lightning implementation of the benchmark described in our paper:
