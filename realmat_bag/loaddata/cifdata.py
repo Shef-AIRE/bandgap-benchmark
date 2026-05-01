@@ -1,3 +1,5 @@
+"""Dataset classes for loading CIF structures and atom features."""
+
 import json
 import os
 import warnings

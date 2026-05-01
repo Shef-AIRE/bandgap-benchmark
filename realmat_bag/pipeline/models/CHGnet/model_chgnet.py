@@ -1,3 +1,5 @@
+"""Factory functions and Lightning wrapper for CHGNet benchmark models."""
+
 import os
 from copy import deepcopy
 from typing import Any, Dict

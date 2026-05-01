@@ -1,3 +1,5 @@
+"""Embedding and basis encoders used by CHGNet."""
+
 from __future__ import annotations
 
 import torch

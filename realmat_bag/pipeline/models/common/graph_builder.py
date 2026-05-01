@@ -1,3 +1,5 @@
+"""Shared crystal graph construction utilities for GNN models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,3 +1,5 @@
+"""Composition-based reference energy model for CHGNet."""
+
 from __future__ import annotations
 
 import collections

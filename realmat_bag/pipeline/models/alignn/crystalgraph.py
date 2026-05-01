@@ -1,3 +1,5 @@
+"""Crystal graph container used by the ALIGNN model."""
+
 from __future__ import annotations
 
 import os

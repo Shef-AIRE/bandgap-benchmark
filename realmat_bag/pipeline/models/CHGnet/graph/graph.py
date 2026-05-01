@@ -1,3 +1,5 @@
+"""Graph node and edge primitives for CHGNet crystal graphs."""
+
 from __future__ import annotations
 
 import json

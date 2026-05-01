@@ -1,3 +1,5 @@
+"""Convert crystal structures into CHGNet crystal graph inputs."""
+
 from __future__ import annotations
 
 import gc

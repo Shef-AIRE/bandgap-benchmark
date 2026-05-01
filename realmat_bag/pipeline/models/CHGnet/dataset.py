@@ -1,3 +1,5 @@
+"""Dataset and collation classes for CHGNet crystal graph inputs."""
+
 from __future__ import annotations
 
 import functools
@@ -862,4 +864,3 @@ def get_train_val_test_loader(
         )
         return train_loader, val_loader, test_loader
     return train_loader, val_loader
-

@@ -1,3 +1,5 @@
+"""Crystal graph container used by the CHGNet model."""
+
 from __future__ import annotations
 
 import os
