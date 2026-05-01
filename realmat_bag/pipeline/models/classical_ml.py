@@ -20,7 +20,12 @@ from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 from sklearn.svm import SVR
 
 from realmat_bag.loaddata.dataloader import extract_features
-from realmat_bag.pipeline.trainer import mean_relative_error
+
+
+def mean_relative_error(y_true, y_pred):
+    eps = 1e-9
+    rel_errors = np.abs(y_true - y_pred) / (np.abs(y_true) + eps)
+    return np.mean(rel_errors)
 
 
 def _build_estimator(model_name: str, seed: int) -> Any:
@@ -29,7 +34,6 @@ def _build_estimator(model_name: str, seed: int) -> Any:
     if model_name == "linear_regression":
         return LinearRegression()
     if model_name == "svm":
-        # kernel will be set via hyperparams if provided
         return SVR()
     raise ValueError(f"Unsupported classical model: {model_name}")
 
@@ -149,7 +153,6 @@ def run_classical_model(cfg, train_dataset, val_dataset, fold_label: str, test_d
 
     val_metrics = {"mae": val_mae, "mse": val_mse, "mre": val_mre, "r2": val_r2}
 
-    # print results and best params
     print(f"Results for fold {fold_label}:")
     print(f"  Validation MAE: {val_mae:.6f}")
     print(f"  Validation MSE: {val_mse:.6f}")
