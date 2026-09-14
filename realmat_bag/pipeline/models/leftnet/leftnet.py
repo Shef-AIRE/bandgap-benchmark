@@ -13,68 +13,10 @@ from torch_geometric.nn import radius_graph
 from torch_geometric.nn.conv import MessagePassing
 # from torch_scatter import scatter
 import torch_scatter
+from realmat_bag.pipeline.models.common.graph_builder import build_pbc_edges as _build_pbc_edge_tensors_from_batch
 
 def swish(x):
     return x * torch.sigmoid(x)
-
-
-def _build_pbc_edge_tensors_from_batch(batch, device, cutoff: float):
-    structures = getattr(batch, "structures", None)
-    if structures is None:
-        raise TypeError("LEFTNet PBC mode expects batch.structures.")
-
-    positions_all = batch.positions.to(device=device)
-    batch_idx = batch.batch_idx.to(device=device, dtype=torch.long)
-    dtype = positions_all.dtype
-
-    edge_index_parts = []
-    edge_vector_parts = []
-    edge_distance_parts = []
-
-    for graph_idx, structure in enumerate(structures):
-        atom_indices = torch.nonzero(batch_idx == graph_idx, as_tuple=False).flatten()
-        if atom_indices.numel() == 0:
-            continue
-
-        center_index, neighbor_index, image, _ = structure.get_neighbor_list(
-            r=cutoff, sites=structure.sites, numerical_tol=1e-8
-        )
-        if len(center_index) == 0:
-            continue
-
-        center_local = torch.as_tensor(center_index, dtype=torch.long, device=device)
-        neighbor_local = torch.as_tensor(neighbor_index, dtype=torch.long, device=device)
-        image_local = torch.as_tensor(image, dtype=dtype, device=device)
-
-        center_global = atom_indices.index_select(0, center_local)
-        neighbor_global = atom_indices.index_select(0, neighbor_local)
-
-        pos_local = positions_all.index_select(0, atom_indices)
-        lattice = torch.as_tensor(structure.lattice.matrix, dtype=dtype, device=device)
-        edge_vector = (
-            pos_local.index_select(0, neighbor_local)
-            + image_local @ lattice
-            - pos_local.index_select(0, center_local)
-        )
-        edge_distance = torch.linalg.norm(edge_vector, dim=-1)
-        edge_index = torch.stack((neighbor_global, center_global), dim=0)
-
-        edge_index_parts.append(edge_index)
-        edge_vector_parts.append(edge_vector)
-        edge_distance_parts.append(edge_distance)
-
-    if not edge_index_parts:
-        return (
-            torch.zeros((2, 0), dtype=torch.long, device=device),
-            torch.zeros((0, 3), dtype=dtype, device=device),
-            torch.zeros(0, dtype=dtype, device=device),
-        )
-
-    return (
-        torch.cat(edge_index_parts, dim=1),
-        torch.cat(edge_vector_parts, dim=0),
-        torch.cat(edge_distance_parts, dim=0),
-    )
 
 
 # Radial basis embedding for pairwise distances.

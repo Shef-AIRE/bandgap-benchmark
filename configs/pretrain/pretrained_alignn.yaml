@@ -1,10 +1,10 @@
 DATASET:
-  TRAIN: "data/pretrain_data.json"
+  TRAIN: "data/pretrain_data_old.json"
   VAL: "data/fine_tune/test_data.json"
 
 MODEL:
   NAME: "alignn"
-  PRETRAINED_MODEL_PATH: "saved_models/pretrain/alignn_z/pretrain-last-epoch=76.ckpt"
+  PRETRAINED_MODEL_PATH: "saved_models/pretrain/alignn_z/pretrain-best-mre-epoch=05-val_mre=0.2017.ckpt"
   INIT_FILE: "cif_file/atom_init.json"
   CIF_FOLDER: "cif_file"
 
