@@ -4,7 +4,7 @@ DATASET:
 
 MODEL:
   NAME: 'cgcnn'
-  PRETRAINED_MODEL_PATH: 'saved_models/pretrain/cgcnn/pretrain-best-mre-epoch=117-val_mre=0.2504.ckpt'
+  PRETRAINED_MODEL_PATH: 'saved_models/pretrain/cgcnn/best.ckpt'
   RADIUS: 8.0
   INIT_FILE: 'cif_file/atom_init.json'
   CIF_FOLDER: "cif_file"
