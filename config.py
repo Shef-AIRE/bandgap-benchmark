@@ -45,7 +45,7 @@ _C.MODEL.PRETRAINED_MODEL_PATH = ""
 _C.MODEL.CIF_FOLDER = "cif_file"
 _C.MODEL.INIT_FILE = "cif_file/atom_init.json"
 _C.MODEL.MAX_NBRS = 12
-_C.MODEL.RADIUS = 7.0
+_C.MODEL.RADIUS = 8.0
 _C.MODEL.HYPERPARAMS = CN(new_allowed=True)
 
 

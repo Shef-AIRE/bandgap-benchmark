@@ -14,7 +14,9 @@ logs/
 lightning_logs/
 figs/
 analysis_outputs/
+outputs/
 .vscode/
+.codex
 
 
 *.pdf
@@ -25,3 +27,5 @@ analysis_outputs/
 output_test/
 traditional_shap.py
 traditional_shap_main.ipynb
+batch_predict_mre_models.py
+data/pretrain_data_old.json

@@ -4,13 +4,12 @@
 """CartNet architecture adapted for crystal bandgap prediction."""
 
 import torch
-from torch_cluster import radius_graph
 import torch_geometric.nn as pyg_nn
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_geometric.graphgym.config import cfg
 from torch_scatter import scatter
 from realmat_bag.pipeline.models.cartnet.utils import ExpNormalSmearing, CosineCutoff
+from realmat_bag.pipeline.models.common.graph_builder import build_pbc_edges
 
 
 class CartNet(torch.nn.Module):
@@ -25,6 +24,7 @@ class CartNet(torch.nn.Module):
         temperature (bool, optional): If `True`, includes temperature information in the encoder. Default is `True`.
         use_envelope (bool, optional): If `True`, applies an envelope function to the interactions. Default is `True`.
         cholesky (bool, optional): If `True`, uses a Cholesky head for the output. If `False`, uses a scalar head. Default is `True`.
+        encoding (str, optional): Node feature encoding, either "z" (atomic numbers) or "prop" (atomic property features). Default is "z".
     Methods:
         forward(batch):
             Performs a forward pass of the model.
@@ -45,10 +45,11 @@ class CartNet(torch.nn.Module):
         temperature: bool = True, 
         use_envelope: bool = True,
         atom_types: bool = True,
-        cholesky: bool = True):
+        cholesky: bool = True,
+        encoding: str = "z"):
         super().__init__()
-    
-        self.encoder = Encoder(dim_in, dim_rbf=dim_rbf, radius=radius, invariant=invariant, temperature=temperature, atom_types=atom_types)
+
+        self.encoder = Encoder(dim_in, dim_rbf=dim_rbf, radius=radius, invariant=invariant, temperature=temperature, atom_types=atom_types, encoding=encoding)
         self.dim_in = dim_in
 
         layers = []
@@ -89,13 +90,14 @@ class CartNet(torch.nn.Module):
 class Encoder(torch.nn.Module):
     """
     Encoder module for the CartNet model.
-    This module encodes node and edge features for input into the CartNet model, incorporating optional temperature information and rotational invariance.
+    This module builds the neighbor graph under periodic boundary conditions and encodes node and edge features for input into the CartNet model, incorporating optional temperature information and rotational invariance.
     Args:
         dim_in (int): Dimension of the input features after embedding.
         dim_rbf (int): Dimension of the radial basis function used for edge attributes.
         radius (float, optional): Cutoff radius for neighbor interactions. Defaults to 5.0.
         invariant (bool, optional): If True, the encoder enforces rotational invariance by excluding directional information from edge attributes. Defaults to False.
         temperature (bool, optional): If True, includes temperature data in the node embeddings. Defaults to True.
+        encoding (str, optional): Node feature encoding, either "z" (atomic numbers) or "prop" (atomic property features). Defaults to "z".
     Attributes:
         dim_in (int): Dimension of the input features.
         invariant (bool): Indicates if rotational invariance is enforced.
@@ -116,7 +118,8 @@ class Encoder(torch.nn.Module):
         radius: float = 5.0,
         invariant: bool = False, 
         temperature: bool = True,
-        atom_types: bool = True
+        atom_types: bool = True,
+        encoding: str = "z"
     ):
         super(Encoder, self).__init__()
         self.dim_in = dim_in
@@ -125,22 +128,31 @@ class Encoder(torch.nn.Module):
         self.invariant = invariant
         self.temperature = temperature
         self.atom_types = atom_types
-        if self.atom_types:
-            self.embedding = nn.Embedding(119, self.dim_in*2)
-            torch.nn.init.xavier_uniform_(self.embedding.weight.data)
-        elif not self.temperature:
-            self.embedding = nn.Embedding(1, self.dim_in)
-
-        if self.temperature:
-            self.temperature_proj_atom = pyg_nn.Linear(1, self.dim_in*2, bias=True)
-        elif self.atom_types:
-            self.bias = nn.Parameter(torch.zeros(self.dim_in*2))
+        self.encoding = encoding
         self.activation = nn.SiLU(inplace=True)
-        
-        if self.temperature or self.atom_types:
-            self.encoder_atom = nn.Sequential(self.activation,
-                                        pyg_nn.Linear(self.dim_in*2, self.dim_in),
-                                        self.activation)
+
+        if encoding == "z":
+            if self.atom_types:
+                self.embedding = nn.Embedding(119, self.dim_in*2)
+                torch.nn.init.xavier_uniform_(self.embedding.weight.data)
+            elif not self.temperature:
+                self.embedding = nn.Embedding(1, self.dim_in)
+
+            if self.temperature:
+                self.temperature_proj_atom = pyg_nn.Linear(1, self.dim_in*2, bias=True)
+            elif self.atom_types:
+                self.bias = nn.Parameter(torch.zeros(self.dim_in*2))
+
+            if self.temperature or self.atom_types:
+                self.encoder_atom = nn.Sequential(self.activation,
+                                            pyg_nn.Linear(self.dim_in*2, self.dim_in),
+                                            self.activation)
+        elif encoding == "prop":
+            # Project raw atom features to the model dimension (linear only)
+            self.atom_feat_proj = nn.LazyLinear(self.dim_in)
+        else:
+            raise ValueError(f"Unsupported CartNet encoding: {encoding}")
+
         if self.invariant:
             dim_edge = dim_rbf
         else:
@@ -158,29 +170,25 @@ class Encoder(torch.nn.Module):
     def forward(self, batch):
 
         batch.device = next(self.parameters()).device
-        data = batch.atom_num.long().to(batch.device)
-        batch_idx = batch.batch_idx.to(batch.device)
-        pos = batch.positions.to(batch.device)
+        batch.edge_index, vec, batch.cart_dist = build_pbc_edges(batch, batch.device, self.radius)
+        batch.cart_dir = vec/batch.cart_dist.unsqueeze(-1)
 
-        batch.edge_index = radius_graph(pos, r=self.radius, batch=batch_idx, max_num_neighbors=1000)
-        j, i = batch.edge_index
-        vec = pos[j] - pos[i]
-        dist = vec.norm(dim=-1)
-        batch.cart_dist = dist
-        batch.cart_dir = vec/dist.unsqueeze(-1)
+        if self.encoding == "z":
+            data = batch.atom_num.long().to(batch.device)
+            if self.temperature and self.atom_types:
+                x = self.embedding(data) + self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
+            elif not self.temperature and self.atom_types:  # atom_types default value is True
+                x = self.embedding(data) + self.bias
+            # elif self.temperature and not self.atom_types:
+            #     x = self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
+            # else:
+            #     batch.x = self.embedding.weight.repeat(batch.x.shape[0],1)
 
-
-        if self.temperature and self.atom_types:
-            x = self.embedding(data) + self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
-        elif not self.temperature and self.atom_types:  # atom_types default value is True
-            x = self.embedding(data) + self.bias
-        # elif self.temperature and not self.atom_types:
-        #     x = self.temperature_proj_atom(batch.temperature.unsqueeze(-1))[batch.batch]
-        # else:
-        #     batch.x = self.embedding.weight.repeat(batch.x.shape[0],1)
-        
-        if self.temperature or self.atom_types:
-            batch.x = self.encoder_atom(x)
+            if self.temperature or self.atom_types:
+                batch.x = self.encoder_atom(x)
+        else:
+            data = batch.atom_fea.to(batch.device)
+            batch.x = self.atom_feat_proj(data)
 
         if self.invariant: # cfg.invariant is False
             batch.edge_attr = self.encoder_edge(self.rbf(batch.cart_dist))

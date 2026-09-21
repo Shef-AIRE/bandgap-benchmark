@@ -6,9 +6,9 @@ Grad×Input saliency across fold checkpoints.
 
 Example:
     python -m realmat_bag.analysis.gradient_saliency \
-        --models all \
+        --models cartnet_z cartnet_prop alignn_z alignn_prop leftnet_z leftnet_prop \
         --mpids mp-5045 mp-570887 \
-        --checkpoint-root saved_models/saved_models/finetune \
+        --checkpoint-root saved_models \
         --output-dir analysis_outputs/saliency
 """
 from __future__ import annotations
@@ -37,6 +37,23 @@ DEFAULT_CFG_MAP = {
     "leftnet_z": "configs/finetune/leftnet/leftnet_z.yaml",
 }
 
+# Each finetune config's own LOGGING.LOG_DIR_NAME decides where its fold
+# checkpoints land under saved_models/, and that layout isn't uniform across
+# models, so map each model name to its checkpoint directory here. Paths are
+# relative to --checkpoint-root; superseded runs are kept in "*_old" dirs and
+# are intentionally not listed.
+DEFAULT_CKPT_DIR_MAP: Dict[str, str] = {
+    "alignn_prop": "finetune/alignn_prop",
+    "alignn_z": "finetune/alignn_z",
+    "cartnet_z": "finetune/cartnet",
+    "cartnet_prop": "finetune/cartnet_prop",
+    "cgcnn": "fine_tune_data/cgcnn_tst",
+    "chgnet_z": "fine_tune_data/chgnet",
+    "chgnet_prop": "finetune/chgnet_prop",
+    "leftnet_prop": "leftnet_prop",
+    "leftnet_z": "leftnet_z",
+}
+
 DEFAULT_MODEL_ORDER = list(DEFAULT_CFG_MAP)
 
 
@@ -50,7 +67,13 @@ def parse_args() -> argparse.Namespace:
     )
     ap.add_argument("--mpids", nargs="+", required=True, help="Space-separated MPIDs to process.")
     ap.add_argument("--cfg-map", nargs="*", default=[], help="Override map entries like name=path.yaml.")
-    ap.add_argument("--checkpoint-root", default="saved_models/saved_models/finetune")
+    ap.add_argument(
+        "--ckpt-dir-map",
+        nargs="*",
+        default=[],
+        help="Override checkpoint subdir entries like name=relative/dir (relative to --checkpoint-root).",
+    )
+    ap.add_argument("--checkpoint-root", default="saved_models/config")
     ap.add_argument("--data-file", default="data/fine_tune/test_data.json")
     ap.add_argument("--output-dir", default="analysis_outputs/saliency")
     ap.add_argument("--device", default=None)
@@ -61,8 +84,8 @@ def parse_args() -> argparse.Namespace:
     return ap.parse_args()
 
 
-def expand_cfg_map(overrides: List[str]) -> Dict[str, str]:
-    mapping = DEFAULT_CFG_MAP.copy()
+def expand_map(defaults: Dict[str, str], overrides: List[str]) -> Dict[str, str]:
+    mapping = defaults.copy()
     for item in overrides:
         if "=" not in item:
             continue
@@ -219,7 +242,8 @@ def main():
 
     set_random_seed(args.seed)
     device = torch.device(args.device or ("cuda" if torch.cuda.is_available() else "cpu"))
-    cfg_map = expand_cfg_map(args.cfg_map)
+    cfg_map = expand_map(DEFAULT_CFG_MAP, args.cfg_map)
+    ckpt_dir_map = expand_map(DEFAULT_CKPT_DIR_MAP, args.ckpt_dir_map)
     model_names = expand_models(args.models, cfg_map)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -227,7 +251,7 @@ def main():
     mpid_limit = args.mpids
     for model_name in model_names:
         cfg_path = Path(cfg_map[model_name])
-        ckpt_dir = Path(args.checkpoint_root) / model_name
+        ckpt_dir = Path(args.checkpoint_root) / ckpt_dir_map.get(model_name, model_name)
         checkpoints = list_best_mre_checkpoints(ckpt_dir, args.fold_pattern, args.num_folds)
         # Load cfg; for CGCNN adjust feature dims from a sample to match checkpoint expectations.
         cfg = get_cfg_defaults()

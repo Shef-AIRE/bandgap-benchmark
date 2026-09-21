@@ -262,6 +262,75 @@ def build_dgl_graphs_from_batch(
     return dgl.batch(graphs).to(device), dgl.batch(line_graphs).to(device)
 
 
+def build_pbc_edges(batch, device, cutoff: float):
+    """Build a radius graph under periodic boundary conditions, as flat edge tensors.
+
+    Neighbors are found with pymatgen's periodic neighbor list via
+    `batch.structures`, so pairs that are only neighbors across a lattice
+    boundary are included and their displacements are image-corrected.
+    Used by models that consume a plain edge_index + displacement/distance
+    representation (LeftNet, CartNet); ALIGNN/CHGNet instead use the
+    DGL-graph builders above.
+
+    Returns:
+        edge_index: [2, E] long tensor (j -> i, source -> target)
+        vec: [E, 3] displacement vectors
+        dist: [E] Euclidean distances
+    """
+    structures = getattr(batch, "structures", None)
+    if structures is None:
+        raise TypeError("build_pbc_edges expects batch.structures.")
+
+    positions_all = batch.positions.to(device=device)
+    batch_idx = batch.batch_idx.to(device=device, dtype=torch.long)
+    dtype = positions_all.dtype
+
+    edge_index_parts, vec_parts, dist_parts = [], [], []
+    for graph_idx, structure in enumerate(structures):
+        atom_indices = torch.nonzero(batch_idx == graph_idx, as_tuple=False).flatten()
+        if atom_indices.numel() == 0:
+            continue
+
+        center_index, neighbor_index, image, _ = structure.get_neighbor_list(
+            r=cutoff, sites=structure.sites, numerical_tol=1e-8
+        )
+        if len(center_index) == 0:
+            continue
+
+        center_local = torch.as_tensor(center_index, dtype=torch.long, device=device)
+        neighbor_local = torch.as_tensor(neighbor_index, dtype=torch.long, device=device)
+        image_local = torch.as_tensor(image, dtype=dtype, device=device)
+
+        center_global = atom_indices.index_select(0, center_local)
+        neighbor_global = atom_indices.index_select(0, neighbor_local)
+
+        pos_local = positions_all.index_select(0, atom_indices)
+        lattice = torch.as_tensor(structure.lattice.matrix, dtype=dtype, device=device)
+        vec = (
+            pos_local.index_select(0, neighbor_local)
+            + image_local @ lattice
+            - pos_local.index_select(0, center_local)
+        )
+        dist = torch.linalg.norm(vec, dim=-1)
+
+        edge_index_parts.append(torch.stack((neighbor_global, center_global), dim=0))
+        vec_parts.append(vec)
+        dist_parts.append(dist)
+
+    if not edge_index_parts:
+        return (
+            torch.zeros((2, 0), dtype=torch.long, device=device),
+            torch.zeros((0, 3), dtype=dtype, device=device),
+            torch.zeros(0, dtype=dtype, device=device),
+        )
+
+    return (
+        torch.cat(edge_index_parts, dim=1),
+        torch.cat(vec_parts, dim=0),
+        torch.cat(dist_parts, dim=0),
+    )
+
+
 def build_graph_components(
     structure,
     device,

@@ -9,6 +9,12 @@ SOLVER:
   NUM_FOLDS: 10
   EPOCHS: 100
 CARTNET:
+  DIM_IN: 256
+  DIM_RBF: 64
+  NUM_LAYERS: 4
+  INVARIANT: true
+  USE_ENVELOPE: true
+  ATOM_TYPES: true
   ENCODING: prop
 LOGGING:
   LOG_DIR: saved_models
